@@ -36,5 +36,5 @@ def predict_priority(prio_bundle, row: dict) -> int:
 
     num = np.array([[row.get(f, 0) for f in feats]])
     txt = tfidf.transform([row.get("descricao", "")])
-    X   = sp.hstack([num, txt]).toarray()
+    X   = sp.hstack([num, txt])
     return int(model.predict(X)[0])

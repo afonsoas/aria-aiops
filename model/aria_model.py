@@ -283,9 +283,9 @@ model_B = RandomForestClassifier(
     random_state=42,
     n_jobs=-1,
 )
-model_B.fit(X_train_B.toarray(), y_train_B)
+model_B.fit(X_train_B, y_train_B)
 
-y_pred_B = model_B.predict(X_test_B.toarray())
+y_pred_B = model_B.predict(X_test_B)
 
 log("\n--- Resultados Modelo B (Random Forest - Prioridade) ---")
 log(classification_report(y_test_B, y_pred_B,

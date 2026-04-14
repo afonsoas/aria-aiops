@@ -25,6 +25,8 @@ with col_form:
         prio       = st.selectbox("Prioridade", ["2 - Alta", "3 - Media", "4 - Baixa"])
         produto    = st.selectbox("Produto", sorted(df["produto"].unique()))
         grupo      = st.selectbox("Grupo designado", sorted(df["grupo"].unique()))
+        categoria  = st.selectbox("Categoria", sorted(df["categoria"].unique()))
+        subcateg   = st.selectbox("Subcategoria", sorted(df["subcategoria"].unique()))
         hora       = st.slider("Hora de abertura", 0, 23, 10)
         dia        = st.selectbox("Dia da semana", ["Segunda", "Terca", "Quarta",
                                                      "Quinta", "Sexta", "Sabado", "Domingo"])
@@ -51,18 +53,18 @@ with col_result:
                 return 0
 
         row = {
-            "prio_num":       prio_num,
-            "hora_abertura":  hora,
-            "dia_semana":     dia_num,
-            "mes":            6,
-            "is_monitoring":  int(is_mon),
-            "has_parent":     int(has_par),
-            "produto_enc":    safe_encode(encoders, "produto", produto),
-            "grupo_enc":      safe_encode(encoders, "grupo", grupo),
-            "categoria_enc":  0,
-            "subcategoria_enc": 0,
-            "cod_fechamento_enc": 0,
-            "descricao":      descricao,
+            "prio_num":            prio_num,
+            "hora_abertura":       hora,
+            "dia_semana":          dia_num,
+            "mes":                 6,
+            "is_monitoring":       int(is_mon),
+            "has_parent":          int(has_par),
+            "produto_enc":         safe_encode(encoders, "produto", produto),
+            "grupo_enc":           safe_encode(encoders, "grupo", grupo),
+            "categoria_enc":       safe_encode(encoders, "categoria", categoria),
+            "subcategoria_enc":    safe_encode(encoders, "subcategoria", subcateg),
+            "cod_fechamento_enc":  0,
+            "descricao":           descricao,
         }
 
         prob = predict_ola(ola_bundle, row)
@@ -101,8 +103,9 @@ with col_result:
         feat_names = ola_bundle["features"] + ola_bundle["tfidf"].get_feature_names_out().tolist()
         importances = ola_bundle["model"].feature_importances_
         top = sorted(zip(feat_names, importances), key=lambda x: x[1], reverse=True)[:6]
+        max_imp = max(fimp for _, fimp in top) or 1.0
         for fname, fimp in top:
-            st.progress(float(fimp * 5), text=f"{fname}  ({fimp:.3f})")
+            st.progress(float(fimp / max_imp), text=f"{fname}  ({fimp:.3f})")
 
         st.markdown("---")
         if pct >= 50:

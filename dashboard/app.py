@@ -58,6 +58,9 @@ with col5:
 st.markdown("---")
 
 # Cards de resumo
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dashboard.utils.data_loader import load_data
 df = load_data()
 
