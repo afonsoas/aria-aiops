@@ -6,6 +6,12 @@ Cluster 3 | 2TSCO | FIAP 2026
 
 import os
 import sys
+
+# Fix Windows console encoding
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -111,7 +117,7 @@ if "Aberto" in df.columns:
 # ---------------------------------------------------------------------------
 log("\n--- Estatísticas Gerais ---")
 log(f"Total de incidentes: {len(df):,}")
-log(f"Período: {df['Aberto'].min()} → {df['Aberto'].max()}" if "Aberto" in df.columns else "")
+log(f"Periodo: {df['Aberto'].min()} a {df['Aberto'].max()}" if "Aberto" in df.columns else "")
 
 pct_monitor = (df["Aberto por"].str.lower().str.contains("monitoramento", na=False).sum() / len(df) * 100)
 log(f"Abertos por Monitoramento: {pct_monitor:.1f}%")
