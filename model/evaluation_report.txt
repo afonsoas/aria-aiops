@@ -1,0 +1,100 @@
+============================================================
+ARIA — Treinamento dos Modelos ML
+============================================================
+
+Carregando: D:\AFONSO\enterprise_challenge\Material Locaweb\LW-DATASET.xlsx
+Shape original: (122543, 19)
+
+--- Engenharia de Features ---
+Features criadas: hora_abertura, dia_semana, mes, is_monitoring, has_parent
+Encoders: produto (52), grupo (17), categoria (142)
+
+==================================================
+MODELO A — Predicao de Violacao OLA
+==================================================
+Registros elegíveis para KPI: 25,600
+Violacoes (target=1): 248 (0.97%)
+Nao violacoes (target=0): 25,352
+Vetorizando descricoes (TF-IDF top-50)...
+Shape X_A: (25600, 60)
+Treino: 20,480 | Teste: 5,120
+Aplicando SMOTE...
+Apos SMOTE — pos: 20,282 | neg: 20,282
+Treinando XGBoost...
+
+--- Resultados Modelo A (XGBoost - OLA) ---
+              precision    recall  f1-score   support
+
+   Nao Viola       1.00      0.85      0.92      5070
+   Viola OLA       0.04      0.60      0.07        50
+
+    accuracy                           0.85      5120
+   macro avg       0.52      0.73      0.50      5120
+weighted avg       0.99      0.85      0.91      5120
+
+ROC-AUC:  0.8382
+Recall (violacoes): 0.6000
+F1 (violacoes):     0.0722
+Matriz de Confusao:
+[[4319  751]
+ [  20   30]]
+
+Top 10 features (Modelo A):
+  domain                              0.1185
+  not running                         0.0778
+  recipes                             0.0715
+  is_monitoring                       0.0540
+  on                                  0.0483
+  grupo_enc                           0.0399
+  on port                             0.0384
+  error backup                        0.0357
+  não                                 0.0270
+  prio_num                            0.0251
+
+Modelo A salvo: D:\AFONSO\aria-aiops\model\model_ola.pkl
+
+==================================================
+MODELO B — Classificacao de Prioridade
+==================================================
+Registros com prio 2-4: 122,209
+prio_num
+2    15649
+3    41732
+4    64828
+Vetorizando descricoes (TF-IDF top-50)...
+Shape X_B: (122209, 59)
+Treino: 97,767 | Teste: 24,442
+Treinando Random Forest...
+
+--- Resultados Modelo B (Random Forest - Prioridade) ---
+              precision    recall  f1-score   support
+
+      2-Alta       0.84      0.93      0.88      3130
+     3-Media       0.84      0.94      0.88      8346
+     4-Baixa       0.98      0.88      0.93     12966
+
+    accuracy                           0.91     24442
+   macro avg       0.89      0.92      0.90     24442
+weighted avg       0.92      0.91      0.91     24442
+
+F1-macro: 0.8981
+F1-weighted: 0.9084
+Matriz de Confusao:
+[[ 2898   210    22]
+ [  379  7807   160]
+ [  184  1316 11466]]
+
+Top 10 features (Modelo B):
+  has_parent                          0.0748
+  problem                             0.0627
+  check application                   0.0599
+  subcategoria_enc                    0.0578
+  application monitoring              0.0535
+  application                         0.0437
+  icmp                                0.0417
+  ping                                0.0410
+  grupo_enc                           0.0410
+  monitoring                          0.0388
+
+Modelo B salvo: D:\AFONSO\aria-aiops\model\model_priority.pkl
+Encoders salvos: D:\AFONSO\aria-aiops\model\encoders.pkl
