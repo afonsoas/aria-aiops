@@ -23,7 +23,8 @@ PLOTLY_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
     font=dict(color=GRAY1, family="Inter, sans-serif", size=12),
-    title_font=dict(color=WHITE, size=14, family="Inter, sans-serif"),
+    # title_font removido — causa renderizacao de "undefined" quando title.text nao esta definido
+    title=dict(text="", font=dict(color=WHITE, size=14)),
     xaxis=dict(
         gridcolor="rgba(255,255,255,0.07)",
         linecolor="rgba(255,255,255,0.15)",
@@ -42,7 +43,7 @@ PLOTLY_LAYOUT = dict(
         bgcolor="rgba(0,0,0,0)",
         font=dict(color=GRAY1),
     ),
-    margin=dict(l=10, r=10, t=35, b=10),
+    margin=dict(l=10, r=10, t=10, b=10),
     coloraxis_colorbar=dict(
         tickfont=dict(color=GRAY2),
         title_font=dict(color=GRAY2),
