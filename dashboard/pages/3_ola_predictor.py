@@ -42,11 +42,11 @@ with col_form:
         prio      = st.selectbox("Prioridade", ["2 - Alta", "3 - Media", "4 - Baixa"])
         col_fa, col_fb = st.columns(2)
         with col_fa:
-            produto   = st.selectbox("Produto", sorted(df["produto"].unique()))
-            categoria = st.selectbox("Categoria", sorted(df["categoria"].unique()))
+            produto   = st.selectbox("Produto", sorted(df["produto"].dropna().unique()))
+            categoria = st.selectbox("Categoria", sorted(df["categoria"].dropna().unique()))
         with col_fb:
-            grupo     = st.selectbox("Grupo designado", sorted(df["grupo"].unique()))
-            subcateg  = st.selectbox("Subcategoria", sorted(df["subcategoria"].unique()))
+            grupo     = st.selectbox("Grupo designado", sorted(df["grupo"].dropna().unique()))
+            subcateg  = st.selectbox("Subcategoria", sorted(df["subcategoria"].dropna().unique()))
 
         col_fc, col_fd = st.columns(2)
         with col_fc:
