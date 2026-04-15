@@ -76,10 +76,16 @@ with col_a:
         text=prio_counts["Qtd"].apply(lambda x: f"{x:,}"),
         textposition="outside",
         textfont=dict(color=GRAY1, size=11),
+        cliponaxis=False,
     ))
     apply_plotly_theme(fig)
-    fig.update_layout(height=300, showlegend=False,
-                      yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)"))
+    max_val = prio_counts["Qtd"].max() if len(prio_counts) else 1
+    fig.update_layout(
+        height=320, showlegend=False,
+        margin=dict(l=10, r=10, t=30, b=10),
+        yaxis=dict(range=[0, max_val * 1.18],
+                   showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
+    )
     st.plotly_chart(fig, use_container_width=True)
 
 with col_b:
@@ -120,9 +126,15 @@ with col_c:
         text=kpi_prio["Taxa"].apply(lambda x: f"{x:.2f}%"),
         textposition="outside",
         textfont=dict(color=GRAY1, size=11),
+        cliponaxis=False,
     ))
     apply_plotly_theme(fig3)
-    fig3.update_layout(height=300, yaxis_title="% de Violacao")
+    max_taxa = kpi_prio["Taxa"].max() if len(kpi_prio) else 1
+    fig3.update_layout(
+        height=320, yaxis_title="% de Violacao",
+        margin=dict(l=10, r=10, t=30, b=10),
+        yaxis=dict(range=[0, max_taxa * 1.25]),
+    )
     st.plotly_chart(fig3, use_container_width=True)
 
 with col_d:
@@ -139,11 +151,20 @@ with col_d:
         textfont=dict(color=GRAY1, size=11),
     ))
     apply_plotly_theme(fig4)
+    fig4.update_traces(
+        textinfo="percent+label",
+        textposition="outside",
+        textfont=dict(size=10, color=GRAY1),
+        pull=[0.03] * len(abertura),
+    )
     fig4.update_layout(
-        height=300,
+        height=340,
+        margin=dict(l=10, r=10, t=10, b=60),
         annotations=[dict(text=f"{abertura['Qtd'].sum():,}", x=0.5, y=0.5,
-                          font=dict(size=16, color="white"), showarrow=False)],
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
+                          font=dict(size=15, color="white"), showarrow=False)],
+        legend=dict(orientation="h", yanchor="top", y=-0.12, xanchor="center", x=0.5,
+                    font=dict(size=10)),
+        showlegend=True,
     )
     st.plotly_chart(fig4, use_container_width=True)
 
@@ -163,7 +184,11 @@ fig5 = go.Figure(go.Heatmap(
     colorbar=dict(tickfont=dict(color=GRAY2), title=dict(text="Qtd", font=dict(color=GRAY2))),
 ))
 apply_plotly_theme(fig5)
-fig5.update_layout(height=230, margin=dict(l=40, r=20, t=10, b=10))
+fig5.update_layout(
+    height=250,
+    margin=dict(l=50, r=20, t=10, b=40),
+    xaxis=dict(tickangle=0, tickfont=dict(size=9), side="bottom"),
+)
 st.plotly_chart(fig5, use_container_width=True)
 
 # ── Top grupos ───────────────────────────────────────────────
@@ -171,6 +196,7 @@ st.markdown('<div class="section-title">Top 10 Grupos por Volume</div>', unsafe_
 grp = dff["grupo"].value_counts().head(10).reset_index()
 grp.columns = ["Grupo", "Qtd"]
 grp = grp.sort_values("Qtd")
+max_grp = int(grp["Qtd"].max()) if len(grp) else 1
 fig6 = go.Figure(go.Bar(
     x=grp["Qtd"], y=grp["Grupo"], orientation="h",
     marker=dict(
@@ -182,8 +208,17 @@ fig6 = go.Figure(go.Bar(
     text=grp["Qtd"].apply(lambda x: f"{x:,}"),
     textposition="outside",
     textfont=dict(color=GRAY1, size=11),
+    cliponaxis=False,
 ))
 apply_plotly_theme(fig6)
-fig6.update_layout(height=320, xaxis_title="Qtd. Incidentes",
-                   xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)"))
+fig6.update_layout(
+    height=340,
+    margin=dict(l=80, r=80, t=10, b=30),
+    xaxis=dict(
+        range=[0, max_grp * 1.18],
+        title="Qtd. Incidentes",
+        showgrid=True, gridcolor="rgba(255,255,255,0.06)",
+    ),
+    yaxis=dict(tickfont=dict(size=11), automargin=True),
+)
 st.plotly_chart(fig6, use_container_width=True)

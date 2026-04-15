@@ -92,15 +92,20 @@ with col_spark:
     ordem = ["VIOLADO", "ALTO", "MEDIO", "BAIXO"]
     vals  = [risco_counts.get(r, 0) for r in ordem]
     cors  = [RISCO_COR[r] for r in ordem]
+    max_r = max(vals) if max(vals) > 0 else 1
     fig_r = go.Figure(go.Bar(
         x=ordem, y=vals,
         marker=dict(color=cors, line=dict(color="rgba(255,255,255,0.08)", width=1)),
         text=vals, textposition="outside",
         textfont=dict(color=GRAY1, size=11),
+        cliponaxis=False,
     ))
     apply_plotly_theme(fig_r)
-    fig_r.update_layout(height=220, showlegend=False,
-                        margin=dict(l=5, r=5, t=5, b=5))
+    fig_r.update_layout(
+        height=240, showlegend=False,
+        margin=dict(l=5, r=5, t=30, b=5),
+        yaxis=dict(range=[0, max_r * 1.25]),
+    )
     st.plotly_chart(fig_r, use_container_width=True)
 
     st.markdown('<div class="section-title" style="margin-top:0.8rem">Por Prioridade</div>', unsafe_allow_html=True)
@@ -111,12 +116,17 @@ with col_spark:
         labels=prio_f["Prioridade"], values=prio_f["Qtd"],
         hole=0.6,
         marker=dict(colors=[ORANGE, BLUE, GREEN, CYAN], line=dict(color=NAVY, width=2)),
+        textinfo="percent",
         textfont=dict(color=GRAY1, size=10),
     ))
     apply_plotly_theme(fig_p)
-    fig_p.update_layout(height=200, margin=dict(l=0,r=0,t=5,b=0),
-                        showlegend=True,
-                        legend=dict(font=dict(size=9), orientation="v"))
+    fig_p.update_layout(
+        height=260,
+        margin=dict(l=5, r=5, t=5, b=55),
+        showlegend=True,
+        legend=dict(font=dict(size=8), orientation="h",
+                    yanchor="top", y=-0.05, xanchor="center", x=0.5),
+    )
     st.plotly_chart(fig_p, use_container_width=True)
 
 with col_table:

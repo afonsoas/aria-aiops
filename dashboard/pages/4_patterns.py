@@ -63,8 +63,9 @@ with col_a:
     st.markdown('<div class="section-title">Top Descricoes mais Frequentes</div>', unsafe_allow_html=True)
     top_desc = dff["descricao"].value_counts().head(top_n).reset_index()
     top_desc.columns = ["Descricao", "Qtd"]
-    top_desc["Label"] = top_desc["Descricao"].str.replace("Problem: ", "", regex=False).str[:55]
+    top_desc["Label"] = top_desc["Descricao"].str.replace("Problem: ", "", regex=False).str[:45]
     top_desc = top_desc.sort_values("Qtd")
+    max_qtd = int(top_desc["Qtd"].max()) if len(top_desc) else 1
 
     fig = go.Figure(go.Bar(
         x=top_desc["Qtd"],
@@ -79,13 +80,18 @@ with col_a:
         text=top_desc["Qtd"].apply(lambda x: f"{x:,}"),
         textposition="outside",
         textfont=dict(color=GRAY1, size=10),
+        cliponaxis=False,
     ))
     apply_plotly_theme(fig)
     fig.update_layout(
-        height=max(320, top_n * 22),
-        xaxis_title="Frequencia",
+        height=max(380, top_n * 24),
+        xaxis=dict(
+            title="Frequencia",
+            range=[0, max_qtd * 1.22],
+            showgrid=True, gridcolor="rgba(255,255,255,0.06)",
+        ),
         yaxis=dict(tickfont=dict(size=9), automargin=True),
-        margin=dict(l=5, r=60, t=10, b=10),
+        margin=dict(l=10, r=90, t=10, b=10),
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -98,32 +104,40 @@ with col_b:
         labels=grp["Grupo"], values=grp["Qtd"],
         hole=0.55,
         marker=dict(colors=palette, line=dict(color=NAVY, width=2)),
+        textinfo="percent",
         textfont=dict(color=GRAY1, size=10),
         textposition="inside",
+        insidetextorientation="radial",
     ))
     apply_plotly_theme(fig2)
     fig2.update_layout(
-        height=280,
+        height=300,
         annotations=[dict(text=f"{grp['Qtd'].sum():,}", x=0.5, y=0.5,
-                          font=dict(size=15, color="white"), showarrow=False)],
-        legend=dict(font=dict(size=9), orientation="v",
-                    x=1.0, xanchor="left"),
-        margin=dict(l=0, r=80, t=10, b=0),
+                          font=dict(size=14, color="white"), showarrow=False)],
+        legend=dict(font=dict(size=8), orientation="v",
+                    x=1.02, xanchor="left", y=0.5, yanchor="middle"),
+        margin=dict(l=0, r=90, t=10, b=10),
     )
     st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown('<div class="section-title" style="margin-top:0.5rem">Top 8 Produtos</div>', unsafe_allow_html=True)
     prod = dff["produto"].value_counts().head(8).reset_index()
     prod.columns = ["Produto", "Qtd"]
+    max_prod = int(prod["Qtd"].max()) if len(prod) else 1
     fig3 = go.Figure(go.Bar(
         x=prod["Produto"], y=prod["Qtd"],
         marker=dict(color=BLUE, line=dict(color="rgba(255,255,255,0.08)", width=1)),
         text=prod["Qtd"].apply(lambda x: f"{x:,}"),
         textposition="outside", textfont=dict(color=GRAY1, size=9),
+        cliponaxis=False,
     ))
     apply_plotly_theme(fig3)
-    fig3.update_layout(height=220, xaxis=dict(tickangle=30, tickfont=dict(size=9)),
-                       margin=dict(l=5, r=5, t=5, b=5))
+    fig3.update_layout(
+        height=250,
+        yaxis=dict(range=[0, max_prod * 1.25]),
+        xaxis=dict(tickangle=35, tickfont=dict(size=9), automargin=True),
+        margin=dict(l=5, r=5, t=28, b=10),
+    )
     st.plotly_chart(fig3, use_container_width=True)
 
 # ── Treemap ──────────────────────────────────────────────────
@@ -190,6 +204,7 @@ for i, (padrao, freq, cor, acao) in enumerate(playbooks, 1):
 st.markdown('<div class="section-title" style="margin-top:1rem">Distribuicao por Hora do Dia</div>', unsafe_allow_html=True)
 hora_counts = dff["hora_abertura"].value_counts().sort_index().reset_index()
 hora_counts.columns = ["Hora", "Qtd"]
+max_hora = int(hora_counts["Qtd"].max()) if len(hora_counts) else 1
 fig5 = go.Figure(go.Bar(
     x=hora_counts["Hora"], y=hora_counts["Qtd"],
     marker=dict(
@@ -198,13 +213,18 @@ fig5 = go.Figure(go.Bar(
         showscale=False,
         line=dict(color="rgba(255,255,255,0.06)", width=1),
     ),
-    text=hora_counts["Qtd"].apply(lambda x: f"{x:,}"),
-    textposition="outside", textfont=dict(color=GRAY1, size=9),
+    # Sem texto em cima para evitar sobreposicao nas 24 colunas
 ))
 apply_plotly_theme(fig5)
 fig5.update_layout(
-    height=240,
-    xaxis=dict(dtick=1, tickfont=dict(size=9)),
-    margin=dict(l=5, r=5, t=5, b=5),
+    height=260,
+    yaxis=dict(range=[0, max_hora * 1.12]),
+    xaxis=dict(
+        dtick=1,
+        tickfont=dict(size=10),
+        tickvals=list(range(0, 24)),
+        ticktext=[f"{h}h" for h in range(0, 24)],
+    ),
+    margin=dict(l=10, r=10, t=10, b=30),
 )
 st.plotly_chart(fig5, use_container_width=True)
