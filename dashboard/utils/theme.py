@@ -59,6 +59,30 @@ ARIA_CSS = """
     color: #e2e8f8 !important;
 }
 
+/* ── Toolbar (faixa branca do topo com botao Deploy) ── */
+[data-testid="stHeader"],
+header[data-testid="stHeader"] {
+    background: #050e1f !important;
+    border-bottom: 1px solid rgba(0,212,255,0.08) !important;
+}
+[data-testid="stToolbar"] {
+    background: #050e1f !important;
+}
+[data-testid="stToolbar"] * { color: #8899bb !important; }
+[data-testid="stToolbar"] button {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 6px !important;
+    color: #8899bb !important;
+}
+[data-testid="stToolbar"] button:hover {
+    background: rgba(0,212,255,0.1) !important;
+    border-color: rgba(0,212,255,0.3) !important;
+    color: #00D4FF !important;
+}
+#MainMenu { visibility: hidden; }
+[data-testid="stDecoration"] { display: none; }
+
 /* Remove padding excessivo */
 .block-container { padding-top: 1.2rem !important; padding-bottom: 1rem !important; }
 
