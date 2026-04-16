@@ -1,10 +1,13 @@
 """Carregamento e cache do LW-DATASET para o dashboard ARIA."""
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
 from pathlib import Path
 
-DATA_FILE = Path(r"D:\AFONSO\enterprise_challenge\Material Locaweb\LW-DATASET.xlsx")
+# Caminho relativo ao root do projeto (funciona local e no Streamlit Cloud/OCI)
+_ROOT = Path(__file__).resolve().parent.parent.parent
+DATA_FILE = Path(os.getenv("ARIA_DATA_FILE", str(_ROOT / "data" / "LW-DATASET.xlsx")))
 
 @st.cache_data(show_spinner="Carregando dataset...")
 def load_data() -> pd.DataFrame:

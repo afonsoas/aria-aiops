@@ -1,11 +1,9 @@
-# Dataset — não versionar (arquivo grande e dados sensíveis)
-data/*.xlsx
-data/*.csv
-data/*.xls
+# Dataset — incluído no repo para deploy (11MB — dentro do limite GitHub)
+# data/*.xlsx
 
-# Modelos treinados (gerados localmente)
-model/*.pkl
-model/*.joblib
+# Modelos treinados — incluídos no repo para deploy (Streamlit Cloud / OCI)
+# model/*.pkl
+# model/*.joblib
 
 # Outputs de EDA
 eda/output/*.png
@@ -22,8 +20,11 @@ venv/
 dist/
 build/
 
-# Streamlit
+# Streamlit — secrets reais nunca no repo
 .streamlit/secrets.toml
+
+# Env real — nunca no repo
+.env
 
 # Oracle wallet / credenciais OCI
 wallet/
@@ -31,6 +32,9 @@ wallet/
 *.sso
 *.ora
 oci_config
+
+# Vídeos (grandes demais para o repo)
+videos/*.mp4
 
 # IDEs
 .vscode/

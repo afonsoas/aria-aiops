@@ -1,4 +1,5 @@
 """Pagina 5 — API Predictor: chama a API REST e exibe historico do banco."""
+import os
 import streamlit as st
 import requests
 import json
@@ -18,8 +19,13 @@ import plotly.graph_objects as go
 inject_css()
 df = load_data()
 
-# ── Config da API ─────────────────────────────────────────────
-API_BASE = st.sidebar.text_input("URL da API", "http://localhost:8000")
+# ── Config da API — lê secrets.toml (Streamlit Cloud) ou env var ou input manual ─
+_default_api = (
+    st.secrets.get("ARIA_API_URL", None)
+    if hasattr(st, "secrets") and "ARIA_API_URL" in st.secrets
+    else os.getenv("ARIA_API_URL", "http://localhost:8000")
+)
+API_BASE = st.sidebar.text_input("URL da API", _default_api)
 
 with st.sidebar:
     st.markdown(f'<div style="color:{CYAN};font-size:1.1rem;font-weight:700;margin-bottom:0.5rem">⚙️ Conexao API</div>', unsafe_allow_html=True)
@@ -88,11 +94,12 @@ with tab1:
             prio_num = int(prio.strip()[0])
             dia_num  = ["Segunda","Terca","Quarta","Quinta","Sexta","Sabado","Domingo"].index(dia)
 
+            import datetime as _dt
             payload = {
                 "prio_num":           prio_num,
                 "hora_abertura":      hora,
                 "dia_semana":         dia_num,
-                "mes":                6,
+                "mes":                _dt.date.today().month,
                 "is_monitoring":      int(is_mon),
                 "has_parent":         int(has_par),
                 "produto_enc":        0,

@@ -1,0 +1,72 @@
+name: ARIA CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify models load
+        run: |
+          python -c "
+          import joblib
+          from pathlib import Path
+          ola  = joblib.load('model/model_ola.pkl')
+          prio = joblib.load('model/model_priority.pkl')
+          enc  = joblib.load('model/encoders.pkl')
+          assert 'model' in ola and 'tfidf' in ola
+          assert 'model' in prio and 'tfidf' in prio
+          assert len(enc) == 5
+          print('Models OK')
+          "
+
+      - name: Verify API imports
+        run: |
+          python -c "
+          import sys; sys.path.insert(0, '.')
+          from api.schemas import IncidentInput, OLAPrediction, PriorityPrediction, HealthResponse
+          from api.db import check_connection
+          print('API imports OK')
+          "
+
+      - name: Test prediction pipeline
+        run: |
+          python -c "
+          import joblib, numpy as np, scipy.sparse as sp
+          ola = joblib.load('model/model_ola.pkl')
+          row = {'prio_num':3,'hora_abertura':10,'dia_semana':0,'mes':4,
+                 'is_monitoring':1,'has_parent':0,'produto_enc':0,'grupo_enc':0,
+                 'categoria_enc':0,'subcategoria_enc':0,'cod_fechamento_enc':0,
+                 'descricao':'Problem: Check Application Monitoring'}
+          num = np.array([[row.get(f,0) for f in ola['features']]])
+          txt = ola['tfidf'].transform([row['descricao']])
+          X   = sp.hstack([num, txt])
+          prob = float(ola['model'].predict_proba(X)[0][1])
+          assert 0.0 <= prob <= 1.0, f'Prob fora do range: {prob}'
+          print(f'Prediction pipeline OK — prob={prob:.4f}')
+          "
+
+      - name: Verify dataset accessible
+        run: |
+          python -c "
+          from pathlib import Path
+          f = Path('data/LW-DATASET.xlsx')
+          assert f.exists(), 'Dataset nao encontrado'
+          assert f.stat().st_size > 1_000_000, 'Dataset muito pequeno'
+          print(f'Dataset OK — {f.stat().st_size/1e6:.1f} MB')
+          "

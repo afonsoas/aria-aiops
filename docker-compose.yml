@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  aria-api:
+    build: .
+    container_name: aria-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./model:/app/model:ro
+      - ./data:/app/data:ro
+      - ./wallet:/app/wallet:ro   # wallet OCI (opcional)
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  aria-dashboard:
+    image: python:3.12-slim
+    container_name: aria-dashboard
+    working_dir: /app
+    command: >
+      sh -c "pip install -q streamlit plotly pandas openpyxl scikit-learn xgboost imbalanced-learn joblib scipy &&
+             streamlit run dashboard/app.py --server.port=8501 --server.address=0.0.0.0"
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      aria-api:
+        condition: service_healthy
+    restart: unless-stopped

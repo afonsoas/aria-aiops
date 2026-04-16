@@ -64,6 +64,9 @@ with col_form:
         with col_ff:
             has_par = st.checkbox("Tem Incidente Pai", value=False)
 
+        cod_fech_opts = ["(não informado)"] + sorted(df["cod_fechamento"].dropna().astype(str).unique())
+        cod_fech = st.selectbox("Código de Fechamento (opcional)", cod_fech_opts)
+
         submitted = st.form_submit_button("🔮  PREDIZER RISCO OLA", use_container_width=True)
 
 # ── Resultado ────────────────────────────────────────────────
@@ -80,18 +83,20 @@ with col_result:
             try:   return int(le.transform([val])[0])
             except: return 0
 
+        import datetime as _dt
         row = {
             "prio_num":           prio_num,
             "hora_abertura":      hora,
             "dia_semana":         dia_num,
-            "mes":                6,
+            "mes":                _dt.date.today().month,
             "is_monitoring":      int(is_mon),
             "has_parent":         int(has_par),
-            "produto_enc":        safe_encode(encoders, "produto",      produto),
-            "grupo_enc":          safe_encode(encoders, "grupo",        grupo),
-            "categoria_enc":      safe_encode(encoders, "categoria",    categoria),
-            "subcategoria_enc":   safe_encode(encoders, "subcategoria", subcateg),
-            "cod_fechamento_enc": 0,
+            "produto_enc":        safe_encode(encoders, "produto",        produto),
+            "grupo_enc":          safe_encode(encoders, "grupo",          grupo),
+            "categoria_enc":      safe_encode(encoders, "categoria",      categoria),
+            "subcategoria_enc":   safe_encode(encoders, "subcategoria",   subcateg),
+            "cod_fechamento_enc": safe_encode(encoders, "cod_fechamento",
+                                  cod_fech if cod_fech != "(não informado)" else None),
             "descricao":          descricao,
         }
 
