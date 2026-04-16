@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: aria-aiops-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: ARIA_DB_USER
+        sync: false
+      - key: ARIA_DB_PASSWORD
+        sync: false
+      - key: ARIA_DB_DSN
+        sync: false
+      - key: ARIA_WALLET_DIR
+        value: /app/wallet
+      - key: ARIA_WALLET_PASSWORD
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
