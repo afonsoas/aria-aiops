@@ -21,6 +21,22 @@ st.markdown(aria_header(
     "Enterprise Challenge &nbsp;·&nbsp; Locaweb AIOps &nbsp;·&nbsp; Cluster 3 | 2TSCO | FIAP 2026"
 ), unsafe_allow_html=True)
 
+# Navegacao — caminhos resolvidos pelo Streamlit relativo ao main script
+import os as _os
+# No Cloud (main=streamlit_app.py) home é "streamlit_app.py";
+# localmente (main=dashboard/app.py) home é "app.py"
+_home = "streamlit_app.py" if _os.path.isfile(
+    _os.path.join(_os.getcwd(), "streamlit_app.py")
+) else "app.py"
+
+c1, c2, c3, c4, c5, c6 = st.columns(6)
+with c1: st.page_link(_home,                          label="🏠  Home")
+with c2: st.page_link("pages/1_kpi_overview.py",      label="📊  KPI")
+with c3: st.page_link("pages/2_incident_list.py",     label="📋  Incidentes")
+with c4: st.page_link("pages/3_ola_predictor.py",     label="🔮  Preditor")
+with c5: st.page_link("pages/4_patterns.py",          label="🔍  Padroes")
+with c6: st.page_link("pages/5_api_predictor.py",     label="🔗  API")
+
 st.markdown("<hr>", unsafe_allow_html=True)
 
 df      = load_data()
