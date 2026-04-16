@@ -17,6 +17,7 @@ class IncidentInput(BaseModel):
     categoria_enc: int = Field(0, ge=0)
     subcategoria_enc: int = Field(0, ge=0)
     cod_fechamento_enc: int = Field(0, ge=0)
+    cod_fechamento: Optional[str] = None
     descricao: str = Field("Problem: Check Application Monitoring")
 
     # Campos opcionais para contexto / persistencia
