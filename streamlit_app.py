@@ -1,18 +1,19 @@
 # Entry point para Streamlit Community Cloud.
-# No painel do Streamlit Cloud, defina "Main file path" como: streamlit_app.py
+# Main file path recomendado: dashboard/app.py
 #
-# Estratégia: muda o diretório de trabalho para dashboard/ antes de executar,
-# para que o Streamlit descubra pages/ corretamente.
+# Este arquivo existe apenas como fallback. Se o Streamlit Cloud estiver
+# configurado com streamlit_app.py como main file, redireciona para dashboard/app.py
+# adicionando o root ao sys.path e executando com __file__ correto.
 
-import os
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.resolve()
 sys.path.insert(0, str(ROOT))
 
-# Muda para dashboard/ — Streamlit descobre pages/ a partir daqui
-os.chdir(ROOT / "dashboard")
-
-# Executa app.py como __main__
-exec(open(ROOT / "dashboard" / "app.py").read())
+# Executa app.py definindo __file__ corretamente para que Path(__file__) funcione
+_app_path = ROOT / "dashboard" / "app.py"
+exec(
+    compile(open(_app_path).read(), str(_app_path), "exec"),
+    {"__file__": str(_app_path), "__name__": "__main__", "__spec__": None}
+)
