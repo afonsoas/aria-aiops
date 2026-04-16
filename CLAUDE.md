@@ -4,6 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## REQUISITOS OBRIGATÓRIOS DO PROJETO (não negociáveis)
+
+| Item | Requisito |
+|------|-----------|
+| **Vídeo de entrega (Sprint 4)** | **5 a 7 minutos** — formato Hands-On, demonstração funcionando |
+| **Vídeo Instagram** | Até 60 segundos — formato Reels 9:16 (1080×1920) |
+| **Slides por sprint** | Sprint 1: 11 sl · Sprint 2: 14 sl · Sprint 3: 14 sl · Sprint 4: 9 sl |
+| **Entrega código-fonte** | GitHub público + requirements.txt |
+| **Link funcional** | URL da solução rodando (dashboard ou API) obrigatório no slide 6 do Sprint 4 |
+
+> **ATENÇÃO:** O vídeo de entrega deve ter entre 5 e 7 minutos. Qualquer vídeo gerado abaixo disso está **fora do requisito**. Ao escrever narração, calcule ~130 palavras/minuto → mínimo 650 palavras, máximo 910 palavras por vídeo de entrega.
+
+---
+
 ## Contexto do Projeto
 
 **ARIA — Automated Response & Incident Analysis**  

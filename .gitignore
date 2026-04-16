@@ -33,8 +33,12 @@ wallet/
 *.ora
 oci_config
 
-# Vídeos (grandes demais para o repo)
-videos/*.mp4
+# Vídeos e scripts de geração (entregáveis FIAP — não fazem parte da solução)
+videos/
+
+# Arquivos avulsos na raiz
+Wallet_ARIAAIOPS.zip
+README
 
 # IDEs
 .vscode/
