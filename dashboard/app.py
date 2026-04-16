@@ -21,32 +21,17 @@ st.markdown(aria_header(
     "Enterprise Challenge &nbsp;·&nbsp; Locaweb AIOps &nbsp;·&nbsp; Cluster 3 | 2TSCO | FIAP 2026"
 ), unsafe_allow_html=True)
 
-st.markdown("""
+_nav_style = ("background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);"
+              "border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;"
+              "text-decoration:none;font-size:0.85rem;font-weight:600")
+st.markdown(f"""
 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem">
-  <a href="." target="_self"
-     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
-            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
-            text-decoration:none;font-size:0.85rem;font-weight:600">🏠 Home</a>
-  <a href="./1_kpi_overview" target="_self"
-     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
-            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
-            text-decoration:none;font-size:0.85rem;font-weight:600">📊 KPI Overview</a>
-  <a href="./2_incident_list" target="_self"
-     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
-            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
-            text-decoration:none;font-size:0.85rem;font-weight:600">📋 Incidentes</a>
-  <a href="./3_ola_predictor" target="_self"
-     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
-            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
-            text-decoration:none;font-size:0.85rem;font-weight:600">🔮 Preditor OLA</a>
-  <a href="./4_patterns" target="_self"
-     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
-            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
-            text-decoration:none;font-size:0.85rem;font-weight:600">🔍 Padrões</a>
-  <a href="./5_api_predictor" target="_self"
-     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
-            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
-            text-decoration:none;font-size:0.85rem;font-weight:600">🔗 API Live</a>
+  <a href="/"               target="_self" style="{_nav_style}">🏠 Home</a>
+  <a href="/kpi_overview"   target="_self" style="{_nav_style}">📊 KPI Overview</a>
+  <a href="/incident_list"  target="_self" style="{_nav_style}">📋 Incidentes</a>
+  <a href="/ola_predictor"  target="_self" style="{_nav_style}">🔮 Preditor OLA</a>
+  <a href="/patterns"       target="_self" style="{_nav_style}">🔍 Padrões</a>
+  <a href="/api_predictor"  target="_self" style="{_nav_style}">🔗 API Live</a>
 </div>
 """, unsafe_allow_html=True)
 
