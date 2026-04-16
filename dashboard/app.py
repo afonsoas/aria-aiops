@@ -21,21 +21,34 @@ st.markdown(aria_header(
     "Enterprise Challenge &nbsp;·&nbsp; Locaweb AIOps &nbsp;·&nbsp; Cluster 3 | 2TSCO | FIAP 2026"
 ), unsafe_allow_html=True)
 
-# Navegacao — caminhos resolvidos pelo Streamlit relativo ao main script
-import os as _os
-# No Cloud (main=streamlit_app.py) home é "streamlit_app.py";
-# localmente (main=dashboard/app.py) home é "app.py"
-_home = "streamlit_app.py" if _os.path.isfile(
-    _os.path.join(_os.getcwd(), "streamlit_app.py")
-) else "app.py"
-
-c1, c2, c3, c4, c5, c6 = st.columns(6)
-with c1: st.page_link(_home,                          label="🏠  Home")
-with c2: st.page_link("pages/1_kpi_overview.py",      label="📊  KPI")
-with c3: st.page_link("pages/2_incident_list.py",     label="📋  Incidentes")
-with c4: st.page_link("pages/3_ola_predictor.py",     label="🔮  Preditor")
-with c5: st.page_link("pages/4_patterns.py",          label="🔍  Padroes")
-with c6: st.page_link("pages/5_api_predictor.py",     label="🔗  API")
+st.markdown("""
+<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem">
+  <a href="." target="_self"
+     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
+            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
+            text-decoration:none;font-size:0.85rem;font-weight:600">🏠 Home</a>
+  <a href="./1_kpi_overview" target="_self"
+     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
+            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
+            text-decoration:none;font-size:0.85rem;font-weight:600">📊 KPI Overview</a>
+  <a href="./2_incident_list" target="_self"
+     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
+            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
+            text-decoration:none;font-size:0.85rem;font-weight:600">📋 Incidentes</a>
+  <a href="./3_ola_predictor" target="_self"
+     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
+            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
+            text-decoration:none;font-size:0.85rem;font-weight:600">🔮 Preditor OLA</a>
+  <a href="./4_patterns" target="_self"
+     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
+            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
+            text-decoration:none;font-size:0.85rem;font-weight:600">🔍 Padrões</a>
+  <a href="./5_api_predictor" target="_self"
+     style="background:rgba(16,91,216,0.2);border:1px solid rgba(0,212,255,0.3);
+            border-radius:8px;padding:0.4rem 0.9rem;color:#00D4FF;
+            text-decoration:none;font-size:0.85rem;font-weight:600">🔗 API Live</a>
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
