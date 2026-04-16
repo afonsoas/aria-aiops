@@ -21,14 +21,6 @@ st.markdown(aria_header(
     "Enterprise Challenge &nbsp;·&nbsp; Locaweb AIOps &nbsp;·&nbsp; Cluster 3 | 2TSCO | FIAP 2026"
 ), unsafe_allow_html=True)
 
-# Navegacao
-c1, c2, c3, c4, c5 = st.columns(5)
-with c1: st.page_link("app.py",                      label="🏠  Home")
-with c2: st.page_link("pages/1_kpi_overview.py",     label="📊  KPI Overview")
-with c3: st.page_link("pages/2_incident_list.py",    label="📋  Incidentes")
-with c4: st.page_link("pages/3_ola_predictor.py",    label="🔮  Preditor OLA")
-with c5: st.page_link("pages/4_patterns.py",         label="🔍  Padroes")
-
 st.markdown("<hr>", unsafe_allow_html=True)
 
 df      = load_data()
