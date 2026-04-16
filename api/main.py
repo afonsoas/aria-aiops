@@ -76,11 +76,15 @@ async def startup_event():
     except Exception as exc:
         logger.error("Falha ao carregar modelos: %s", exc)
 
-    # Tenta criar tabelas no DB se credenciais disponiveis
-    try:
-        ensure_tables()
-    except Exception as exc:
-        logger.warning("ensure_tables falhou (pode ser offline): %s", exc)
+    # Cria tabelas em background para não bloquear o startup
+    import threading
+    def _init_db():
+        try:
+            ensure_tables()
+            logger.info("DB: tabelas verificadas/criadas.")
+        except Exception as exc:
+            logger.warning("ensure_tables falhou (modo offline): %s", exc)
+    threading.Thread(target=_init_db, daemon=True).start()
 
 
 # ── Helpers ───────────────────────────────────────────────────
