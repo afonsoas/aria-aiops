@@ -151,7 +151,7 @@ with col_result:
         ))
         apply_plotly_theme(fig_g)
         fig_g.update_layout(height=200, margin=dict(l=20, r=20, t=10, b=10))
-        st.plotly_chart(fig_g, use_container_width=True)
+        st.plotly_chart(fig_g, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
         # Feature importance
         st.markdown(f'<div class="section-title" style="margin-top:0.5rem">Fatores do Modelo</div>', unsafe_allow_html=True)

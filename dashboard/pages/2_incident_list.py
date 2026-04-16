@@ -106,7 +106,7 @@ with col_spark:
         margin=dict(l=5, r=5, t=30, b=5),
         yaxis=dict(range=[0, max_r * 1.25]),
     )
-    st.plotly_chart(fig_r, use_container_width=True)
+    st.plotly_chart(fig_r, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
     st.markdown('<div class="section-title" style="margin-top:0.8rem">Por Prioridade</div>', unsafe_allow_html=True)
     prio_f = dff["prioridade"].value_counts().reset_index()
@@ -127,7 +127,7 @@ with col_spark:
         legend=dict(font=dict(size=8), orientation="h",
                     yanchor="top", y=-0.05, xanchor="center", x=0.5),
     )
-    st.plotly_chart(fig_p, use_container_width=True)
+    st.plotly_chart(fig_p, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 with col_table:
     st.markdown('<div class="section-title">Tabela de Incidentes</div>', unsafe_allow_html=True)

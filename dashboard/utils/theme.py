@@ -44,6 +44,7 @@ PLOTLY_LAYOUT = dict(
         font=dict(color=GRAY1),
     ),
     margin=dict(l=10, r=10, t=10, b=10),
+    dragmode=False,
     coloraxis_colorbar=dict(
         tickfont=dict(color=GRAY2),
         title_font=dict(color=GRAY2),

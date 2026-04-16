@@ -152,7 +152,7 @@ with tab1:
                     ))
                     apply_plotly_theme(fig_g)
                     fig_g.update_layout(height=180, margin=dict(l=20, r=20, t=5, b=5))
-                    st.plotly_chart(fig_g, use_container_width=True)
+                    st.plotly_chart(fig_g, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
                     st.info(f"**Recomendacao:** {data['recomendacao']}")
 
@@ -243,7 +243,7 @@ with tab2:
                         fig_r.update_layout(height=240, showlegend=False,
                                             margin=dict(l=5, r=5, t=30, b=5),
                                             yaxis=dict(range=[0, max(vals or [1]) * 1.3]))
-                        st.plotly_chart(fig_r, use_container_width=True)
+                        st.plotly_chart(fig_r, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
                     with col_g2:
                         st.markdown('<div class="section-title">Probabilidade ao Longo do Tempo</div>', unsafe_allow_html=True)
@@ -265,7 +265,7 @@ with tab2:
                                 yaxis=dict(range=[0, 105]),
                                 margin=dict(l=10, r=10, t=10, b=30),
                             )
-                            st.plotly_chart(fig_t, use_container_width=True)
+                            st.plotly_chart(fig_t, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
                 # Tabela
                 st.markdown('<div class="section-title">Tabela Detalhada</div>', unsafe_allow_html=True)

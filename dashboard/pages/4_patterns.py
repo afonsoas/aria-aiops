@@ -93,7 +93,7 @@ with col_a:
         yaxis=dict(tickfont=dict(size=9), automargin=True),
         margin=dict(l=10, r=90, t=10, b=10),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 with col_b:
     st.markdown('<div class="section-title">Volume por Grupo</div>', unsafe_allow_html=True)
@@ -118,7 +118,7 @@ with col_b:
                     x=1.02, xanchor="left", y=0.5, yanchor="middle"),
         margin=dict(l=0, r=90, t=10, b=10),
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
     st.markdown('<div class="section-title" style="margin-top:0.5rem">Top 8 Produtos</div>', unsafe_allow_html=True)
     prod = dff["produto"].value_counts().head(8).reset_index()
@@ -138,7 +138,7 @@ with col_b:
         xaxis=dict(tickangle=35, tickfont=dict(size=9), automargin=True),
         margin=dict(l=5, r=5, t=28, b=10),
     )
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig3, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 # ── Treemap ──────────────────────────────────────────────────
 st.markdown('<div class="section-title">Treemap — Grupo × Categoria</div>', unsafe_allow_html=True)
@@ -167,7 +167,7 @@ fig4.update_layout(
         tickfont=dict(color=GRAY2), title=dict(text="Qtd", font=dict(color=GRAY2))
     ),
 )
-st.plotly_chart(fig4, use_container_width=True)
+st.plotly_chart(fig4, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 # ── Playbooks ────────────────────────────────────────────────
 st.markdown('<div class="section-title">Playbooks Sugeridos — Top 5 Padroes</div>', unsafe_allow_html=True)
@@ -227,4 +227,4 @@ fig5.update_layout(
     ),
     margin=dict(l=10, r=10, t=10, b=30),
 )
-st.plotly_chart(fig5, use_container_width=True)
+st.plotly_chart(fig5, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})

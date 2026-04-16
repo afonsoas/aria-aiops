@@ -86,7 +86,7 @@ with col_a:
         yaxis=dict(range=[0, max_val * 1.18],
                    showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 with col_b:
     st.markdown('<div class="section-title">Evolucao Mensal de Incidentes</div>', unsafe_allow_html=True)
@@ -103,7 +103,7 @@ with col_b:
     apply_plotly_theme(fig2)
     fig2.update_layout(height=300,
                        xaxis=dict(tickangle=45, tickfont=dict(size=9)))
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 # ── Linha 2: Taxa OLA + Pie abertura ─────────────────────────
 col_c, col_d = st.columns(2)
@@ -135,7 +135,7 @@ with col_c:
         margin=dict(l=10, r=10, t=30, b=10),
         yaxis=dict(range=[0, max_taxa * 1.25]),
     )
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig3, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 with col_d:
     st.markdown('<div class="section-title">Abertura: Monitoramento vs Manual</div>', unsafe_allow_html=True)
@@ -166,7 +166,7 @@ with col_d:
                     font=dict(size=10)),
         showlegend=True,
     )
-    st.plotly_chart(fig4, use_container_width=True)
+    st.plotly_chart(fig4, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 # ── Heatmap hora x dia ───────────────────────────────────────
 st.markdown('<div class="section-title">Heatmap — Hora de Abertura x Dia da Semana</div>', unsafe_allow_html=True)
@@ -189,7 +189,7 @@ fig5.update_layout(
     margin=dict(l=50, r=20, t=10, b=40),
     xaxis=dict(tickangle=0, tickfont=dict(size=9), side="bottom"),
 )
-st.plotly_chart(fig5, use_container_width=True)
+st.plotly_chart(fig5, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
 # ── Top grupos ───────────────────────────────────────────────
 st.markdown('<div class="section-title">Top 10 Grupos por Volume</div>', unsafe_allow_html=True)
@@ -221,4 +221,4 @@ fig6.update_layout(
     ),
     yaxis=dict(tickfont=dict(size=11), automargin=True),
 )
-st.plotly_chart(fig6, use_container_width=True)
+st.plotly_chart(fig6, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
