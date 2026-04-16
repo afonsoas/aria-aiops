@@ -291,6 +291,17 @@ hr { border-color: rgba(255,255,255,0.07) !important; }
     background: #105BD8 !important;
 }
 
+/* sidebar navigation — texto em maiusculas */
+[data-testid="stSidebarNav"] a span,
+[data-testid="stSidebarNav"] span,
+[data-testid="stSidebarNavItems"] span,
+section[data-testid="stSidebar"] nav a span {
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+}
+
 /* page nav links */
 [data-testid="stPageLink"] a {
     background: rgba(255,255,255,0.05) !important;
