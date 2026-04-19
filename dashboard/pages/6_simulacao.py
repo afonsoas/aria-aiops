@@ -189,7 +189,10 @@ if "sim_incidentes" in st.session_state:
     with col_tabela:
         st.markdown(f'<div class="section-title">Incidentes da Rodada Atual</div>', unsafe_allow_html=True)
 
-        display_cols = ["ID", "Hora", "Dia", "Prioridade", "Grupo", "Descricao", "Monit.", "Risco %", "Nivel"]
+        # Colunas fixas — evita quebra de linha nas células
+        COLS = "88px 44px 36px 52px 110px 44px 60px 68px"
+        CELL = "overflow:hidden;white-space:nowrap;text-overflow:ellipsis"
+
         rows_html = ""
         for inc in sorted(incidentes, key=lambda x: x["_prob"], reverse=True):
             nivel = inc["_nivel"]
@@ -203,30 +206,34 @@ if "sim_incidentes" in st.session_state:
                 bg = "rgba(0,200,122,0.06)"; badge_bg = "#00C87A"; badge_c = "#000"
                 border_l = "3px solid #00C87A"
 
-            badge = f'<span style="background:{badge_bg};color:{badge_c};padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:700">{nivel}</span>'
+            badge = (f'<span style="background:{badge_bg};color:{badge_c};padding:1px 6px;'
+                     f'border-radius:10px;font-size:0.70rem;font-weight:700;white-space:nowrap">'
+                     f'{nivel}</span>')
+            desc  = inc["Descricao"][:30]
+            grupo = inc["Grupo"][:14]
 
             rows_html += f"""
             <div style="background:{bg};border-left:{border_l};border-radius:6px;
-                        padding:0.5rem 0.75rem;margin-bottom:0.4rem;
-                        display:grid;grid-template-columns:90px 45px 40px 55px 1fr 1fr 40px 65px 70px;
-                        gap:0.4rem;align-items:center;font-size:0.78rem">
-                <span style="color:{GRAY2};font-family:monospace">{inc['ID']}</span>
-                <span style="color:{GRAY1}">{inc['Hora']}</span>
-                <span style="color:{GRAY2}">{inc['Dia']}</span>
-                <span style="color:{GRAY1}">{inc['Prioridade']}</span>
-                <span style="color:{GRAY1}">{inc['Grupo'][:18]}</span>
-                <span style="color:{GRAY2}">{inc['Descricao']}</span>
-                <span style="text-align:center">{inc['Monit.']}</span>
-                <span style="color:#fff;font-weight:700;text-align:right">{inc['Risco %']}</span>
+                        padding:0.35rem 0.6rem;margin-bottom:0.3rem;overflow:hidden;
+                        display:grid;grid-template-columns:{COLS};
+                        gap:0.35rem;align-items:center;font-size:0.76rem;height:32px">
+                <span style="{CELL};color:{GRAY2};font-family:monospace" title="{inc['ID']}">{inc['ID']}</span>
+                <span style="{CELL};color:{GRAY1}">{inc['Hora']}</span>
+                <span style="{CELL};color:{GRAY2}">{inc['Dia']}</span>
+                <span style="{CELL};color:{GRAY1}">{inc['Prioridade']}</span>
+                <span style="{CELL};color:{GRAY1}" title="{inc['Grupo']}">{grupo}</span>
+                <span style="{CELL};text-align:center">{inc['Monit.']}</span>
+                <span style="{CELL};color:#fff;font-weight:700;text-align:right">{inc['Risco %']}</span>
                 <span style="text-align:right">{badge}</span>
             </div>"""
 
-        # Header
+        # Header alinhado com as mesmas colunas
         header = f"""
-        <div style="display:grid;grid-template-columns:90px 45px 40px 55px 1fr 1fr 40px 65px 70px;
-                    gap:0.4rem;padding:0.3rem 0.75rem;margin-bottom:0.25rem;font-size:0.72rem;color:{GRAY2}">
+        <div style="display:grid;grid-template-columns:{COLS};
+                    gap:0.35rem;padding:0.25rem 0.6rem;margin-bottom:0.2rem;
+                    font-size:0.70rem;color:{GRAY2};font-weight:600;letter-spacing:0.03em">
             <span>ID</span><span>Hora</span><span>Dia</span><span>Prio</span>
-            <span>Grupo</span><span>Descricao</span><span>Mon</span>
+            <span>Grupo</span><span>Mon</span>
             <span style="text-align:right">Risco</span><span style="text-align:right">Nivel</span>
         </div>"""
         st.markdown(header + rows_html, unsafe_allow_html=True)
