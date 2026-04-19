@@ -223,7 +223,7 @@ def on_cover_page(canvas, doc):
     canvas.setFont("Helvetica", 7.5)
     canvas.drawString(MARGIN, 1.5 * cm,
         f"Documento gerado em {datetime.date.today().strftime('%d/%m/%Y')} "
-        f"| github.com/afonsoas/aria-aiops | Versao 3.0")
+        f"| github.com/afonsoas/aria-aiops | Versao 4.0")
 
 
 # ── Conteudo ──────────────────────────────────────────────────
@@ -260,11 +260,11 @@ def build_story(styles):
             "Enterprise Challenge · Locaweb AIOps · FIAP 2026",
             styles["cover_meta"]),
         Paragraph(
-            "Cluster 3 · 2TSCO | Sprint 3 — MVP Completo",
+            "Cluster 3 · 2TSCO | Sprint 4 — Solucao Final",
             styles["cover_meta"]),
         sp(6),
         Paragraph(
-            f"Versao 3.0 · {datetime.date.today().strftime('%d/%m/%Y')}",
+            f"Versao 4.0 · {datetime.date.today().strftime('%d/%m/%Y')}",
             styles["cover_meta"]),
         PageBreak(),
     ]
@@ -296,11 +296,11 @@ def build_story(styles):
         sp(4),
         aria_table([
             ["Modelo", "Algoritmo", "Metrica Principal", "Dataset de Treino"],
-            ["Modelo A — OLA", "XGBoost + SMOTE", "ROC-AUC: 0.84 | Recall: 60%",
-             "20.480 incidentes elegíveis"],
-            ["Modelo B — Prioridade", "Random Forest", "F1-macro: 0.90 | Accuracy: 91%",
+            ["Modelo A — OLA", "XGBoost + SMOTE + Calibracao Isotonica",
+             "ROC-AUC: 0.86 | Precision: 27%", "20.480 incidentes elegíveis"],
+            ["Modelo B — Prioridade", "Random Forest", "F1-macro: 0.89 | Accuracy: 90%",
              "97.767 incidentes"],
-        ], [3.2*cm, 4.0*cm, 5.0*cm, 4.0*cm]),
+        ], [3.2*cm, 4.8*cm, 4.2*cm, 4.0*cm]),
         sp(10),
 
         h2("Arquitetura da Solucao"),
@@ -341,12 +341,13 @@ def build_story(styles):
         sp(4),
         aria_table([
             ["Pagina", "URL", "Funcao Principal"],
-            ["Home", "/", "KPIs globais e visao geral dos modelos"],
+            ["Home", "/", "KPIs globais e visao geral dos modelos (v4.0)"],
             ["KPI Overview", "/kpi_overview", "6 graficos de analise de indicadores"],
             ["Incidentes", "/incident_list", "Tabela filtravel com todos os incidentes"],
-            ["Preditor OLA", "/ola_predictor", "Predicao de risco de violacao OLA"],
+            ["Preditor OLA", "/ola_predictor", "Predicao de risco + explicacao SHAP por instancia"],
             ["Padroes", "/patterns", "Heatmaps e analise de comportamento"],
-            ["API Live", "/api_predictor", "Interface para testar a API REST"],
+            ["API Live", "/api_predictor", "Interface para testar a API REST + historico ADB"],
+            ["Simulacao", "/simulacao", "Geracao de incidentes sinteticos em tempo real"],
         ], [3.0*cm, 3.5*cm, 8.5*cm]),
         PageBreak(),
     ]
@@ -376,8 +377,8 @@ def build_story(styles):
         sp(4),
         aria_table([
             ["Card", "Informacao"],
-            ["Modelo A — Predicao OLA", "XGBoost + SMOTE | ROC-AUC 0.84 | Recall 60% | 20.480 incidentes"],
-            ["Modelo B — Classificacao Prioridade", "Random Forest | F1-macro 0.90 | Accuracy 91% | 97.767 incidentes"],
+            ["Modelo A — Predicao OLA", "XGBoost + SMOTE + Calibracao Isotonica | ROC-AUC 0.86 | Precision 27% | 20.480 incidentes"],
+            ["Modelo B — Classificacao Prioridade", "Random Forest | F1-macro 0.89 | Accuracy 90% | 97.767 incidentes"],
             ["Top Incidente", "Check Application Monitoring — 28.728 ocorrencias (23,4% do total)"],
         ], [5.5*cm, 10.0*cm]),
         PageBreak(),
@@ -469,10 +470,11 @@ def build_story(styles):
         h1("6. Preditor OLA — Risco de Violacao"),
         line(CYAN, 1),
         sp(6),
-        p("<b>Modelo A:</b> XGBoost + SMOTE | ROC-AUC 0.84 | Recall 60%"),
+        p("<b>Modelo A:</b> XGBoost + SMOTE + Calibracao Isotonica | ROC-AUC 0.86 | Precision 27%"),
         sp(4),
-        p("Prevê a probabilidade de um <b>novo incidente</b> violar o OLA antes de ser formalmente "
-          "aberto. Permite acoes preventivas antes do escalonamento."),
+        p("Prevê a probabilidade calibrada de um <b>novo incidente</b> violar o OLA antes de ser "
+          "formalmente aberto. Apos a predicao, o <b>SHAP TreeExplainer</b> decompoe a previsao "
+          "em contribuicoes individuais de cada feature, permitindo entender o motivo do risco."),
         sp(8),
 
         h2("Campos do Formulario"),
@@ -495,22 +497,33 @@ def build_story(styles):
 
         h2("Interpretacao do Resultado"),
         sp(4),
+        p("<b>Importante:</b> Os thresholds foram ajustados para refletir as probabilidades "
+          "calibradas. Com calibracao isotonica e taxa base de violacao de 0,97%, valores "
+          "acima de 25% ja representam risco significativamente elevado."),
+        sp(4),
         aria_table([
-            ["Probabilidade", "Nivel de Risco", "Acao Recomendada"],
-            ["0% – 25%", "BAIXO RISCO",
+            ["Prob. Calibrada", "Nivel de Risco", "Acao Recomendada"],
+            ["0% – 9%",   "🟢 BAIXO RISCO",
              "Fluxo padrao — seguir processo normal de atendimento"],
-            ["25% – 50%", "RISCO MEDIO",
+            ["10% – 24%", "🟠 RISCO MEDIO",
              "Monitorar — acionar time responsavel se sem resposta em 30 min"],
-            ["50% – 100%", "ALTO RISCO",
+            ["≥ 25%",     "🔴 ALTO RISCO",
              "Escalar imediatamente para o grupo designado"],
         ], [3.0*cm, 3.5*cm, 9.0*cm]),
         sp(10),
 
-        h2("Fatores do Modelo"),
+        h2("Explicacao SHAP por Instancia"),
         sp(4),
-        p("Apos a predicao, a secao <b>'Fatores do Modelo'</b> exibe as 6 features que mais "
-          "influenciaram o resultado — com barra proporcional ao peso de cada variavel. "
-          "Permite entender o motivo do risco calculado."),
+        p("Apos cada predicao, o <b>SHAP TreeExplainer</b> calcula a contribuicao de cada "
+          "feature para aquele incidente especifico. O grafico de barras horizontal exibe:"),
+        sp(3),
+        bl("<b>Barras vermelhas</b> — features que <b>aumentam</b> o risco de violacao OLA"),
+        bl("<b>Barras verdes</b> — features que <b>reduzem</b> o risco de violacao OLA"),
+        bl("Valor numerico = contribuicao SHAP (magnitude = importancia relativa)"),
+        bl("Valor base = probabilidade media do modelo sem nenhuma feature especifica"),
+        sp(4),
+        p("Se o SHAP nao estiver disponivel (modelo sem suporte a TreeExplainer), "
+          "o sistema exibe automaticamente a importancia global das features como fallback."),
         sp(6),
         info_box(
             "<b>Importante:</b> Cada predicao e automaticamente salva no Oracle Autonomous "
@@ -554,9 +567,56 @@ def build_story(styles):
         PageBreak(),
     ]
 
-    # ── 8. API LIVE ───────────────────────────────────────────
+    # ── 8. SIMULACAO ─────────────────────────────────────────
     story += [
-        h1("8. API Live — Interface de Predicao"),
+        h1("8. Simulacao — Incidentes em Tempo Real"),
+        line(CYAN, 1),
+        sp(6),
+        p("A pagina de <b>Simulacao</b> gera incidentes sinteticos a partir das distribuicoes "
+          "reais do dataset Locaweb e executa o Modelo A em tempo real, permitindo observar "
+          "como o sistema se comportaria em producao."),
+        sp(8),
+
+        h2("Controles da Simulacao"),
+        sp(4),
+        aria_table([
+            ["Controle", "Descricao"],
+            ["Incidentes por rodada", "Slider para definir quantos incidentes sinteticos gerar (1–50)"],
+            ["Gerar Incidentes", "Executa uma rodada de predicoes com distribuicoes reais"],
+            ["Auto-Refresh", "Ativa geracao automatica a cada 10 segundos"],
+            ["Limpar", "Reseta o historico acumulado da sessao"],
+        ], [4.5*cm, 11.0*cm]),
+        sp(10),
+
+        h2("Visualizacoes"),
+        sp(4),
+        aria_table([
+            ["Componente", "O que exibe"],
+            ["Cards KPI (4)", "Total gerado, Alto Risco, Risco Medio, Baixo Risco da rodada atual"],
+            ["Tabela de Incidentes", "ID, Hora, Prioridade, Grupo, Produto, Prob.%, Nivel com badge colorido"],
+            ["Donut Distribuicao", "Proporcao ALTO / MEDIO / BAIXO na rodada atual"],
+            ["Historico Acumulado", "Grafico de barras empilhadas por rodada — evolucao da sesssao"],
+        ], [4.5*cm, 11.0*cm]),
+        sp(10),
+
+        h2("Como os Incidentes Sinteticos Sao Gerados"),
+        sp(4),
+        bl("Grupo, produto, categoria e subcategoria: amostrados das distribuicoes reais do dataset"),
+        bl("Prioridade: distribuicao ponderada (60% Media, 25% Baixa, 15% Alta)"),
+        bl("Hora de abertura: uniforme entre 0-23h com maior peso em horario comercial"),
+        bl("Descricao: selecionada aleatoriamente do top-50 descricoes mais frequentes do dataset"),
+        bl("is_monitoring / has_parent: bernoulli com probabilidades historicas do dataset"),
+        sp(6),
+        info_box(
+            "<b>Nota:</b> Os incidentes sinteticos nao sao salvos no Oracle ADB — "
+            "sao usados apenas para demonstracao e validacao do modelo em tempo real.",
+            "body_small", colors.HexColor("#051530"), CYAN, styles),
+        PageBreak(),
+    ]
+
+    # ── 9. API LIVE ───────────────────────────────────────────
+    story += [
+        h1("9. API Live — Interface de Predicao"),
         line(CYAN, 1),
         sp(6),
         p("Interface visual para consumir a API REST diretamente pelo browser, sem necessidade "
@@ -591,23 +651,25 @@ def build_story(styles):
 
     # ── 9. API REST ───────────────────────────────────────────
     story += [
-        h1("9. API REST — Integracao com Sistemas Externos"),
+        h1("10. API REST — Integracao com Sistemas Externos"),
         line(CYAN, 1),
         sp(6),
         p("A API ARIA pode ser integrada a qualquer sistema que suporte chamadas HTTP. "
           "Documentacao interativa disponivel em <b>/docs</b> (Swagger UI)."),
         sp(8),
 
-        h2("Endpoints Disponiveis"),
+        h2("Endpoints Disponiveis (API v4.0)"),
         sp(4),
         aria_table([
             ["Metodo", "Endpoint", "Descricao"],
-            ["GET",  "/health",           "Status da API, modelos e conexao com DB"],
-            ["POST", "/predict/ola",      "Probabilidade de violacao OLA (0–100%)"],
-            ["POST", "/predict/priority", "Classificacao de prioridade (2, 3 ou 4)"],
-            ["GET",  "/predictions/ola",  "Historico de predicoes salvas no Oracle ADB"],
-            ["GET",  "/encoders/info",    "Valores validos por campo codificado"],
-        ], [1.8*cm, 4.0*cm, 9.7*cm]),
+            ["GET",  "/health",              "Status da API, modelos e conexao com DB"],
+            ["POST", "/predict/ola",         "Probabilidade de violacao OLA (0–100%)"],
+            ["POST", "/predict/ola/batch",   "Predicao em lote — ate 100 incidentes simultaneos"],
+            ["POST", "/predict/priority",    "Classificacao de prioridade (2, 3 ou 4)"],
+            ["POST", "/explain/ola",         "Predicao OLA + top 8 features SHAP explicadas"],
+            ["GET",  "/predictions/ola",     "Historico de predicoes salvas no Oracle ADB"],
+            ["GET",  "/encoders/info",       "Valores validos por campo codificado"],
+        ], [1.8*cm, 4.5*cm, 9.2*cm]),
         sp(10),
 
         h2("Exemplo — Predicao OLA (curl)"),
@@ -648,7 +710,7 @@ def build_story(styles):
 
     # ── 10. ORACLE ADB ────────────────────────────────────────
     story += [
-        h1("10. Oracle Autonomous Database"),
+        h1("11. Oracle Autonomous Database"),
         line(CYAN, 1),
         sp(6),
         p("Todas as predicoes realizadas pela API sao automaticamente persistidas no "
@@ -687,7 +749,7 @@ def build_story(styles):
 
     # ── 11. RESOLUCAO DE PROBLEMAS ────────────────────────────
     story += [
-        h1("11. Resolucao de Problemas"),
+        h1("12. Resolucao de Problemas"),
         line(CYAN, 1),
         sp(6),
         aria_table([
@@ -720,18 +782,20 @@ def build_story(styles):
         bl("<b>Logs da API:</b> Railway Dashboard — projeto aria-aiops"),
         sp(12),
 
-        h1("12. Informacoes Tecnicas"),
+        h1("13. Informacoes Tecnicas"),
         line(CYAN, 1),
         sp(6),
         aria_table([
             ["Componente", "Tecnologia", "Versao"],
-            ["Dashboard", "Streamlit", ">= 1.28"],
+            ["Dashboard", "Streamlit + Plotly", ">= 1.28"],
             ["API", "FastAPI + Uvicorn", ">= 0.104 / >= 0.24"],
             ["Modelo OLA", "XGBoost + imbalanced-learn (SMOTE)", ">= 2.0 / >= 0.11"],
+            ["Calibracao", "Isotonic Regression (sklearn)", ">= 1.3"],
+            ["Explicabilidade", "SHAP TreeExplainer", ">= 0.44"],
             ["Modelo Prioridade", "scikit-learn RandomForest", ">= 1.3"],
-            ["NLP", "TF-IDF + scipy.sparse", ">= 1.11"],
+            ["NLP", "TF-IDF + NLTK Stopwords PT-BR", ">= 1.11 / >= 3.8"],
             ["Banco de Dados", "Oracle Autonomous DB (oracledb thin mode)", ">= 2.0"],
-            ["Hospedagem API", "Railway.app (Docker)", "Free tier"],
+            ["CI/CD", "GitHub Actions + Railway.app", "—"],
             ["Hospedagem Dashboard", "Streamlit Community Cloud", "Free tier"],
             ["Linguagem", "Python", "3.12"],
         ], [4.0*cm, 6.0*cm, 5.5*cm]),

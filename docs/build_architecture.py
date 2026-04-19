@@ -306,18 +306,18 @@ class FullArchDiagram(Flowable):
         box(x_ml1, y_ml, bw_ml, bh_ml, colors.HexColor("#0d1f45"), PURPLE)
         label(x_ml1 + bw_ml/2, y_ml + bh_ml/2 + 3, "Modelo A — XGBoost", size=7.5, color=PURPLE)
         label(x_ml1 + bw_ml/2, y_ml + bh_ml/2 - 5, "Predicao OLA", "Helvetica", 6.5, GRAY2)
-        label(x_ml1 + bw_ml/2, y_ml + bh_ml/2 - 14, "ROC-AUC 0.84 | Recall 60%", "Helvetica", 6, GRAY2)
+        label(x_ml1 + bw_ml/2, y_ml + bh_ml/2 - 14, "ROC-AUC 0.86 | Precision 27%", "Helvetica", 6, GRAY2)
         box(x_ml2, y_ml, bw_ml, bh_ml, colors.HexColor("#0d1f45"), GREEN)
         label(x_ml2 + bw_ml/2, y_ml + bh_ml/2 + 3, "Modelo B — RandomForest", size=7.5, color=GREEN)
         label(x_ml2 + bw_ml/2, y_ml + bh_ml/2 - 5, "Classificacao Prioridade", "Helvetica", 6.5, GRAY2)
-        label(x_ml2 + bw_ml/2, y_ml + bh_ml/2 - 14, "F1-macro 0.90 | Acc 91%", "Helvetica", 6, GRAY2)
+        label(x_ml2 + bw_ml/2, y_ml + bh_ml/2 - 14, "F1-macro 0.89 | Acc 90%", "Helvetica", 6, GRAY2)
         # NLP box
         x_nlp = x_ml2 + bw_ml + 0.6*cm
         bw_nlp = w - x_nlp - pad
         box(x_nlp, y_ml, bw_nlp, bh_ml, colors.HexColor("#1a1a2e"), CYAN)
-        label(x_nlp + bw_nlp/2, y_ml + bh_ml/2 + 3, "NLP — TF-IDF", size=7.5, color=CYAN)
-        label(x_nlp + bw_nlp/2, y_ml + bh_ml/2 - 5, "top-50 tokens", "Helvetica", 6.5, GRAY2)
-        label(x_nlp + bw_nlp/2, y_ml + bh_ml/2 - 14, "+ SMOTE balancing", "Helvetica", 6, GRAY2)
+        label(x_nlp + bw_nlp/2, y_ml + bh_ml/2 + 3, "NLP + SHAP", size=7.5, color=CYAN)
+        label(x_nlp + bw_nlp/2, y_ml + bh_ml/2 - 5, "TF-IDF + Stopwords PT-BR", "Helvetica", 6.5, GRAY2)
+        label(x_nlp + bw_nlp/2, y_ml + bh_ml/2 - 14, "SHAP TreeExplainer + Isotonic Cal.", "Helvetica", 6, GRAY2)
 
         c.setFillColor(PURPLE)
         c.setFont("Helvetica-Bold", 6.5)
@@ -339,7 +339,9 @@ class FullArchDiagram(Flowable):
         endpoints = [
             ("GET /health", CYAN),
             ("POST /predict/ola", GREEN),
+            ("POST /predict/ola/batch", GREEN),
             ("POST /predict/priority", GREEN),
+            ("POST /explain/ola", PURPLE),
             ("GET /predictions/ola", ORANGE),
             ("GET /encoders/info", GRAY2),
         ]
@@ -739,29 +741,31 @@ story.append(spacer(0.2))
 story.append(metrics_row([
     ("122.543", "Incidentes/ano", BLUE),
     ("248", "Violações OLA", ORANGE),
-    ("0.84", "ROC-AUC Modelo A", GREEN),
-    ("91%", "Acurácia Modelo B", PURPLE),
+    ("0.86", "ROC-AUC Modelo A", GREEN),
+    ("0.89", "F1-macro Modelo B", PURPLE),
 ]))
 story.append(spacer(0.4))
 
-story.append(Paragraph("Componentes Principais", sH2))
+story.append(Paragraph("Componentes Principais — Sprint 4 v4.0", sH2))
 story.append(kv_table([
-    ("Dataset",    "LW-DATASET.xlsx — 122.543 incidentes Locaweb (Jan/2023–Dez/2025), 19 colunas"),
-    ("Modelo A",   "XGBoost + SMOTE — predição binária de violação OLA (ROC-AUC 0.84, Recall 60%)"),
-    ("Modelo B",   "Random Forest — classificação multiclasse de prioridade 2/3/4 (F1-macro 0.90)"),
-    ("NLP",        "TF-IDF top-50 tokens em descrição de incidente, concatenado às features numéricas via scipy.sparse"),
-    ("API REST",   "FastAPI + Uvicorn, 5 endpoints, Swagger automático, deploy Railway.app (Docker)"),
-    ("Dashboard",  "Streamlit 6 páginas + Plotly (glassmorphism), deploy Streamlit Community Cloud"),
-    ("Banco",      "Oracle Autonomous DB (OCI, Always Free, sa-saopaulo-1) — thin mode sem Oracle Client"),
+    ("Dataset",       "LW-DATASET.xlsx — 122.543 incidentes Locaweb (Jan/2023–Dez/2025), 19 colunas"),
+    ("Modelo A",      "XGBoost + SMOTE + Calibração Isotônica — predição OLA (ROC-AUC 0.86, Precision 27%, threshold 0.167)"),
+    ("Modelo B",      "Random Forest — classificação multiclasse de prioridade 2/3/4 (F1-macro 0.89)"),
+    ("NLP",           "TF-IDF top-50 tokens + Stopwords PT-BR (NLTK), concatenado via scipy.sparse"),
+    ("Explicabilidade","SHAP TreeExplainer — top 8 features por instância, waterfall chart no dashboard"),
+    ("API REST",      "FastAPI v4.0 + Uvicorn, 7 endpoints (incl. /explain/ola e /predict/ola/batch), Railway.app"),
+    ("Dashboard",     "Streamlit 7 páginas + Plotly (glassmorphism), incl. Simulação em tempo real"),
+    ("Banco",         "Oracle Autonomous DB (OCI, Always Free, sa-saopaulo-1) — thin mode sem Oracle Client"),
+    ("CI/CD",         "GitHub Actions: valida modelos, schemas e pipeline; Railway auto-deploy no push main"),
 ]))
 story.append(spacer(0.3))
 
 story.append(Paragraph("Stack Tecnológico", sH2))
-story.append(tag_table(["Python 3.11", "FastAPI", "Streamlit", "XGBoost", "Random Forest", "Oracle ADB"]))
+story.append(tag_table(["Python 3.12", "FastAPI", "Streamlit", "XGBoost", "Random Forest", "Oracle ADB"]))
 story.append(spacer(0.2))
-story.append(tag_table(["Pandas/NumPy", "scikit-learn", "imbalanced-learn", "scipy.sparse", "TF-IDF", "reportlab"]))
+story.append(tag_table(["SHAP", "Isotonic Regression", "NLTK", "imbalanced-learn", "scipy.sparse", "TF-IDF"]))
 story.append(spacer(0.2))
-story.append(tag_table(["Railway.app", "Docker", "Streamlit Cloud", "OCI Always Free", "oracledb thin", "GitHub Actions"]))
+story.append(tag_table(["Railway.app", "Docker", "Streamlit Cloud", "OCI Always Free", "GitHub Actions", "reportlab"]))
 
 story.append(PageBreak())
 
@@ -783,7 +787,7 @@ story.append(Paragraph("Tecnologias por Camada", sH2))
 layers = [
     ["Camada", "Tecnologia", "Deploy", "Responsabilidade"],
     ["Dados", "Pandas + OpenPyXL", "Local / Railway", "Ingestão, limpeza, feature engineering"],
-    ["ML", "XGBoost + RandomForest + TF-IDF + SMOTE", "Railway (pkl)", "Treinamento e inferência"],
+    ["ML", "XGBoost + RandomForest + SHAP + Isotonic Cal.", "Railway (pkl)", "Treinamento, calibração e inferência"],
     ["API", "FastAPI + Uvicorn + Pydantic", "Railway.app (Docker)", "Exposição dos modelos via HTTP REST"],
     ["Dashboard", "Streamlit + Plotly", "Streamlit Cloud", "Visualização analítica e predição interativa"],
     ["Banco", "Oracle ADB + oracledb thin", "OCI Always Free", "Persistência e histórico de predições"],
@@ -881,15 +885,18 @@ story.append(PageBreak())
 story.append(SectionHeader("CAMADA DE MACHINE LEARNING", "04"))
 story.append(spacer(0.3))
 
-story.append(Paragraph("Modelo A — Predição de Violação OLA (XGBoost)", sH2))
+story.append(Paragraph("Modelo A — Predição de Violação OLA (XGBoost + Calibração)", sH2))
 story.append(kv_table([
-    ("Arquivo PKL",    "model/model_ola.pkl"),
-    ("Algoritmo",      "XGBClassifier (binary:logistic) com SMOTE para balanceamento de classes"),
+    ("Arquivo PKL",    "model/model_ola.pkl  (wrapper _CalibratedXGB em model/calibrator.py)"),
+    ("Algoritmo",      "XGBClassifier (binary:logistic) + SMOTE + Calibração Isotônica pós-treino"),
     ("Dataset treino", "20.480 instâncias (80% de 25.600 elegíveis para KPI)"),
     ("SMOTE",          "Após oversampling: 20.282 positivos sintéticos vs 20.282 negativos — proporção 1:1"),
-    ("Features",       "11 numéricas + TF-IDF top-50 tokens = vetor de 61 dimensões (scipy.sparse)"),
-    ("ROC-AUC",        "0.8382  |  Recall violações: 60%  |  Precision: 4% (trade-off de negócio)"),
-    ("Trade-off",      "Precision baixa é aceitável — melhor alertar falso positivo do que perder violação real"),
+    ("Calibração",     "IsotonicRegression fit nos scores brutos do conjunto de teste — probabilidades calibradas"),
+    ("Threshold",      "0.1667 — selecionado via precision_recall_curve maximizando F1 (vs 0.5 padrão)"),
+    ("Features",       "10 numéricas + TF-IDF top-50 tokens + Stopwords PT-BR = vetor de 60 dimensões"),
+    ("ROC-AUC",        "0.8614  |  Precision: 27%  |  Recall: 14%  |  F1: 0.18"),
+    ("Thresholds risco","ALTO ≥ 25% | MÉDIO ≥ 10% | BAIXO < 10% — ajustados para probs. calibradas"),
+    ("Explicabilidade", "SHAP TreeExplainer — top 8 features por instância, waterfall chart no dashboard"),
 ]))
 story.append(spacer(0.2))
 story.append(Paragraph("Top 10 Features — Modelo A", sH3))
@@ -956,24 +963,27 @@ story.append(PageBreak())
 story.append(SectionHeader("CAMADA DE API REST", "05"))
 story.append(spacer(0.3))
 
-story.append(Paragraph("Visão Geral", sH2))
+story.append(Paragraph("Visão Geral — API v4.0", sH2))
 story.append(kv_table([
-    ("Framework",    "FastAPI 0.104+  |  Uvicorn ASGI server  |  Python 3.11"),
+    ("Framework",    "FastAPI 0.104+  |  Uvicorn ASGI server  |  Python 3.12"),
     ("Deploy",       "Railway.app (Docker)  |  URL: aria-api-production.up.railway.app"),
     ("Documentação", "/docs (Swagger UI)  |  /redoc (ReDoc)"),
     ("CORS",         "allow_origins=['*'] — aceita requisições de qualquer origem"),
-    ("Modelos",      "Carregados via joblib no startup — persistem em memória para baixa latência"),
+    ("Modelos",      "Carregados via joblib no startup — _CalibratedXGB + SHAP TreeExplainer em memória"),
     ("Banco",        "Escrita assíncrona no Oracle ADB — falha silenciosa se offline"),
+    ("CI/CD",        "GitHub Actions valida pipeline a cada push; Railway auto-deploy na branch main"),
 ]))
 story.append(spacer(0.3))
 
 story.append(Paragraph("Endpoints Disponíveis", sH2))
 story.append(endpoint_table([
-    ("GET",  "/health",             "Status da API, modelos e conexão DB",      '{"status":"ok","modelos_carregados":true}'),
-    ("POST", "/predict/ola",        "Probabilidade de violação OLA (0-100%)",   '{"probabilidade":0.72,"nivel_risco":"ALTO"}'),
-    ("POST", "/predict/priority",   "Classificação de prioridade (2/3/4)",      '{"prioridade_predita":2,"label":"2 - Alta"}'),
-    ("GET",  "/predictions/ola",    "Histórico de predições no Oracle ADB",     '[{"numero":"...","probabilidade":...}]'),
-    ("GET",  "/encoders/info",      "Valores válidos nos LabelEncoders",        '{"produto":["Hospedagem",...],...}'),
+    ("GET",  "/health",              "Status da API, modelos e conexão DB",          '{"status":"ok","modelos_carregados":true}'),
+    ("POST", "/predict/ola",         "Probabilidade de violação OLA (0-100%)",        '{"probabilidade":0.18,"nivel_risco":"MEDIO"}'),
+    ("POST", "/predict/ola/batch",   "Predição em lote — até 100 incidentes",         '{"total":10,"alto_risco":1,"medio_risco":3,...}'),
+    ("POST", "/predict/priority",    "Classificação de prioridade (2/3/4)",            '{"prioridade_predita":2,"label":"2 - Alta"}'),
+    ("POST", "/explain/ola",         "Predição OLA + top 8 features SHAP",            '{"probabilidade":0.18,"top_features":[...]}'),
+    ("GET",  "/predictions/ola",     "Histórico de predições no Oracle ADB",          '[{"numero":"...","probabilidade":...}]'),
+    ("GET",  "/encoders/info",       "Valores válidos nos LabelEncoders",             '{"produto":["Hospedagem",...],...}'),
 ]))
 story.append(spacer(0.3))
 
@@ -1044,15 +1054,16 @@ story.append(kv_table([
 ]))
 story.append(spacer(0.3))
 
-story.append(Paragraph("Estrutura das 6 Páginas", sH2))
+story.append(Paragraph("Estrutura das 7 Páginas (Sprint 4)", sH2))
 pages_data = [
     ["Página", "URL", "Arquivo", "Conteúdo Principal"],
-    ["Home", "/", "dashboard/app.py", "KPIs globais, overview modelos, links de navegação"],
+    ["Home", "/", "dashboard/app.py", "KPIs globais, overview modelos v4.0, links de navegação"],
     ["KPI Overview", "/kpi_overview", "1_kpi_overview.py", "6 gráficos: volume temporal, distribuição prioridade, heatmap, violações OLA"],
     ["Incidentes", "/incident_list", "2_incident_list.py", "Tabela filtrável por ano/grupo/prioridade, badges coloridos, export CSV"],
-    ["Preditor OLA", "/ola_predictor", "3_ola_predictor.py", "Formulário interativo → gauge de probabilidade + nível de risco + recomendação"],
+    ["Preditor OLA", "/ola_predictor", "3_ola_predictor.py", "Formulário → gauge probabilidade calibrada + SHAP waterfall por instância"],
     ["Padrões", "/patterns", "4_patterns.py", "Heatmaps hora×dia, análise Team14, padrões recorrentes por produto/categoria"],
-    ["API Live", "/api_predictor", "5_api_predictor.py", "3 abas: predição via API, histórico Oracle ADB, documentação de uso"],
+    ["API Live", "/api_predictor", "5_api_predictor.py", "3 abas: predição via API, histórico Oracle ADB, documentação v4.0"],
+    ["Simulação", "/simulacao", "6_simulacao.py", "Geração de incidentes sintéticos em tempo real, KPIs por rodada, histórico acumulado"],
 ]
 pages_t = Table(pages_data, colWidths=[2.5*cm, 2.8*cm, 3.8*cm, 6.9*cm])
 pages_t.setStyle(TableStyle([
@@ -1109,13 +1120,15 @@ train_steps = [
     ("2. Cleaning",    "Remoção de NaN em colunas críticas → conversão de tipos → strip de strings"),
     ("3. Features",    "Extração de hora/dia/mês → flags is_monitoring / has_parent → prio_num"),
     ("4. Encoding",    "LabelEncoder por coluna (produto, grupo, categoria, subcategoria, cod_fechamento)"),
-    ("5. TF-IDF",      "TfidfVectorizer(max_features=50) em 'descricao_resumida' → sparse matrix"),
-    ("6. Merge",       "scipy.sparse.hstack([num_array, tfidf_matrix]) → X shape (N, 61)"),
-    ("7. SMOTE (A)",   "Somente Modelo A: imblearn SMOTE → equaliza classes (248 → 20.282 positivos)"),
-    ("8. Train/Test",  "train_test_split(test_size=0.2, stratify=y) → garante proporção de classes"),
-    ("9. Treino",      "XGBClassifier (Modelo A) / RandomForestClassifier (Modelo B) → fit(X_train, y_train)"),
-    ("10. Avaliação",  "classification_report + roc_auc_score + confusion_matrix → evaluation_report.txt"),
-    ("11. Export",     "joblib.dump({model, tfidf, features}) → model_ola.pkl / model_priority.pkl"),
+    ("5. TF-IDF",         "TfidfVectorizer(max_features=50, stop_words=NLTK_PT) → sparse matrix"),
+    ("6. Merge",          "scipy.sparse.hstack([num_array, tfidf_matrix]) → X shape (N, 60)"),
+    ("7. SMOTE (A)",      "Somente Modelo A: imblearn SMOTE → equaliza classes (248 → 20.282 positivos)"),
+    ("8. Train/Test",     "train_test_split(test_size=0.2, stratify=y) → garante proporção de classes"),
+    ("9. Treino",         "XGBClassifier (Modelo A) / RandomForestClassifier (Modelo B) → fit(X_train, y_train)"),
+    ("10. Calibração (A)","IsotonicRegression fit nos scores brutos do test set → probabilidades calibradas"),
+    ("11. Threshold (A)", "precision_recall_curve → argmax(F1) → best_thresh=0.1667 → _CalibratedXGB wrapper"),
+    ("12. Avaliação",     "classification_report + roc_auc_score + confusion_matrix → evaluation_report.txt"),
+    ("13. Export",        "joblib.dump({model:_CalibratedXGB, model_raw:XGB, tfidf, features}) → pkl"),
 ]
 for step, desc in train_steps:
     story.append(Paragraph(
