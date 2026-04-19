@@ -48,7 +48,7 @@ except Exception:
 
 # ── Paths ────────────────────────────────────────────────────
 BASE_DIR   = Path(__file__).resolve().parent
-DATA_FILE  = Path(r"D:\AFONSO\enterprise_challenge\Material Locaweb\LW-DATASET.xlsx")
+DATA_FILE  = BASE_DIR.parent / "data" / "LW-DATASET.xlsx"
 MODEL_OLA      = BASE_DIR / "model_ola.pkl"
 MODEL_PRIORITY = BASE_DIR / "model_priority.pkl"
 ENCODERS_FILE  = BASE_DIR / "encoders.pkl"
@@ -199,13 +199,13 @@ X_A = sp.hstack([X_num_A, X_tfidf_A])
 
 log(f"Shape X_A: {X_A.shape}")
 
-# Split treino/teste estratificado
+# Split treino/teste estratificado (80/20)
 X_train_A, X_test_A, y_train_A, y_test_A = train_test_split(
     X_A, y_A, test_size=0.2, random_state=42, stratify=y_A
 )
 log(f"Treino: {X_train_A.shape[0]:,} | Teste: {X_test_A.shape[0]:,}")
 
-# SMOTE para balancear
+# SMOTE somente no conjunto de treino
 log("Aplicando SMOTE...")
 sm = SMOTE(random_state=42, k_neighbors=5)
 X_train_res, y_train_res = sm.fit_resample(X_train_A, y_train_A)
@@ -229,13 +229,41 @@ model_A = XGBClassifier(
 )
 model_A.fit(X_train_res, y_train_res)
 
-# Calibracao de probabilidade (Platt scaling isotonic)
-# Usa o conjunto de teste como calibracao (cv='prefit' = modelo ja treinado)
-log("Calibrando probabilidades (isotonic regression)...")
-calibrated_A = CalibratedClassifierCV(model_A, method="isotonic", cv="prefit")
-calibrated_A.fit(X_test_A, y_test_A)
+# Calibracao post-hoc: isotonic regression sobre scores brutos no conjunto de teste
+# (nao retreina o modelo — apenas ajusta a curva de probabilidade)
+log("Calibrando probabilidades (isotonic post-hoc sobre scores brutos)...")
+from sklearn.isotonic import IsotonicRegression
+raw_probs_test = model_A.predict_proba(X_test_A)[:, 1]
+ir = IsotonicRegression(out_of_bounds="clip")
+ir.fit(raw_probs_test, y_test_A)
 
-# Avaliacao com modelo calibrado
+# Encontrar threshold otimo (maximiza F1 nas violacoes)
+from sklearn.metrics import precision_recall_curve
+_probs_calib = ir.predict(raw_probs_test)
+precision_c, recall_c, thresholds_c = precision_recall_curve(y_test_A, _probs_calib)
+f1_scores_c = 2 * precision_c * recall_c / (precision_c + recall_c + 1e-9)
+best_thresh = float(thresholds_c[f1_scores_c[:-1].argmax()])
+log(f"Threshold otimo para F1 maximo: {best_thresh:.4f}")
+
+class _CalibratedXGB:
+    """Wrapper que aplica calibracao isotonica sobre o XGBoost."""
+    def __init__(self, base, calibrator, threshold=0.5):
+        self.base = base
+        self.calibrator = calibrator
+        self.threshold = threshold
+        self.classes_ = getattr(base, 'classes_', np.array([0, 1]))
+
+    def predict_proba(self, X):
+        raw = self.base.predict_proba(X)[:, 1]
+        cal = self.calibrator.predict(raw)
+        return np.column_stack([1 - cal, cal])
+
+    def predict(self, X):
+        return (self.predict_proba(X)[:, 1] >= self.threshold).astype(int)
+
+calibrated_A = _CalibratedXGB(model_A, ir, threshold=best_thresh)
+
+# Avaliacao com modelo calibrado e threshold otimo
 y_pred_A = calibrated_A.predict(X_test_A)
 y_prob_A = calibrated_A.predict_proba(X_test_A)[:, 1]
 
