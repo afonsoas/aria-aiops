@@ -18,6 +18,27 @@ df     = load_data()
 models = load_models()
 ola_bundle, prio_bundle, encoders = models
 
+def _show_importance_fallback(feat_names, bundle):
+    importances = bundle["model"].feature_importances_ if not hasattr(bundle["model"], "estimator") else bundle["model_raw"].feature_importances_
+    top6 = sorted(zip(feat_names, importances), key=lambda x: x[1], reverse=True)[:6]
+    max_imp = max(v for _, v in top6) or 1.0
+    feats_html = ""
+    for fname, fimp in top6:
+        pct_bar = fimp / max_imp * 100
+        feats_html += f"""
+        <div style="margin-bottom:0.5rem">
+          <div style="display:flex;justify-content:space-between;
+                      font-size:0.78rem;color:{GRAY1};margin-bottom:3px">
+            <span>{fname}</span><span style="color:{CYAN}">{fimp:.3f}</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:6px">
+            <div style="background:linear-gradient(90deg,{BLUE},{CYAN});
+                        width:{pct_bar:.0f}%;height:6px;border-radius:4px"></div>
+          </div>
+        </div>"""
+    st.markdown(feats_html, unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.75rem;color:{GRAY2}">Importancia global do modelo (SHAP nao disponivel)</div>', unsafe_allow_html=True)
+
 # ── SHAP explainer (cache por sessao) ────────────────────────
 @st.cache_resource(show_spinner=False)
 def _get_shap_explainer(bundle):
@@ -252,25 +273,3 @@ with col_result:
             &bull; Features: prioridade, hora, grupo, produto, categoria, descricao (TF-IDF)
         </div>
         """, unsafe_allow_html=True)
-
-
-def _show_importance_fallback(feat_names, bundle):
-    importances = bundle["model"].feature_importances_
-    top6 = sorted(zip(feat_names, importances), key=lambda x: x[1], reverse=True)[:6]
-    max_imp = max(v for _, v in top6) or 1.0
-    feats_html = ""
-    for fname, fimp in top6:
-        pct_bar = fimp / max_imp * 100
-        feats_html += f"""
-        <div style="margin-bottom:0.5rem">
-          <div style="display:flex;justify-content:space-between;
-                      font-size:0.78rem;color:{GRAY1};margin-bottom:3px">
-            <span>{fname}</span><span style="color:{CYAN}">{fimp:.3f}</span>
-          </div>
-          <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:6px">
-            <div style="background:linear-gradient(90deg,{BLUE},{CYAN});
-                        width:{pct_bar:.0f}%;height:6px;border-radius:4px"></div>
-          </div>
-        </div>"""
-    st.markdown(feats_html, unsafe_allow_html=True)
-    st.markdown(f'<div style="font-size:0.75rem;color:{GRAY2}">Importancia global do modelo (SHAP nao disponivel)</div>', unsafe_allow_html=True)

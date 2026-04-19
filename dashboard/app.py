@@ -32,6 +32,7 @@ st.markdown(f"""
   <a href="/ola_predictor"  target="_self" style="{_nav_style}">🔮 Preditor OLA</a>
   <a href="/patterns"       target="_self" style="{_nav_style}">🔍 Padrões</a>
   <a href="/api_predictor"  target="_self" style="{_nav_style}">🔗 API Live</a>
+  <a href="/simulacao"      target="_self" style="{_nav_style}">⚡ Simulacao</a>
 </div>
 """, unsafe_allow_html=True)
 
@@ -72,7 +73,7 @@ st.markdown("""
                 letter-spacing:1px;margin-bottom:0.5rem">Modelo A — Predicao OLA</div>
     <div style="color:#fff;font-size:1.1rem;font-weight:700">XGBoost + SMOTE</div>
     <div style="color:#8899bb;font-size:0.82rem;margin-top:0.3rem">
-        ROC-AUC 0.84 &nbsp;·&nbsp; Recall 60%<br>
+        ROC-AUC 0.86 &nbsp;·&nbsp; Precision 27% · Recall 14%<br>
         Treinado em 20.480 incidentes elegíveis
     </div>
   </div>
@@ -100,4 +101,4 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
-st.caption("ARIA v1.0 — Sprint 2 | github.com/afonsoas/aria-aiops | Cluster 3 · 2TSCO · FIAP 2026")
+st.caption("ARIA v4.0 — Sprint 4 | github.com/afonsoas/aria-aiops | Cluster 3 · 2TSCO · FIAP 2026")

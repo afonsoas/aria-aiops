@@ -36,6 +36,10 @@ from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
 import scipy.sparse as sp
+try:
+    from model.calibrator import _CalibratedXGB
+except ImportError:
+    from calibrator import _CalibratedXGB
 
 # Stopwords PT-BR para TF-IDF
 try:
@@ -244,22 +248,6 @@ precision_c, recall_c, thresholds_c = precision_recall_curve(y_test_A, _probs_ca
 f1_scores_c = 2 * precision_c * recall_c / (precision_c + recall_c + 1e-9)
 best_thresh = float(thresholds_c[f1_scores_c[:-1].argmax()])
 log(f"Threshold otimo para F1 maximo: {best_thresh:.4f}")
-
-class _CalibratedXGB:
-    """Wrapper que aplica calibracao isotonica sobre o XGBoost."""
-    def __init__(self, base, calibrator, threshold=0.5):
-        self.base = base
-        self.calibrator = calibrator
-        self.threshold = threshold
-        self.classes_ = getattr(base, 'classes_', np.array([0, 1]))
-
-    def predict_proba(self, X):
-        raw = self.base.predict_proba(X)[:, 1]
-        cal = self.calibrator.predict(raw)
-        return np.column_stack([1 - cal, cal])
-
-    def predict(self, X):
-        return (self.predict_proba(X)[:, 1] >= self.threshold).astype(int)
 
 calibrated_A = _CalibratedXGB(model_A, ir, threshold=best_thresh)
 

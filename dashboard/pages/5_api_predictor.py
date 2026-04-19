@@ -48,9 +48,9 @@ st.markdown("""
             margin-bottom:1rem;position:relative;overflow:hidden">
   <div style="position:absolute;top:0;left:0;right:0;height:2px;
               background:linear-gradient(90deg,transparent,#7C3AED,#00C87A,transparent)"></div>
-  <span style="color:#fff;font-size:1.25rem;font-weight:700">🚀 API Predictor — Sprint 3 MVP</span>
+  <span style="color:#fff;font-size:1.25rem;font-weight:700">🚀 API Predictor — Sprint 4</span>
   <span style="color:#8899bb;font-size:0.82rem;margin-left:1rem">
-      FastAPI REST &nbsp;·&nbsp; Oracle ADB &nbsp;·&nbsp; Historico de predicoes
+      FastAPI REST &nbsp;·&nbsp; Oracle ADB &nbsp;·&nbsp; SHAP Explicavel &nbsp;·&nbsp; Batch
   </span>
 </div>
 """, unsafe_allow_html=True)
@@ -287,7 +287,7 @@ with tab2:
 
 # ── Tab 3: Documentacao ───────────────────────────────────────
 with tab3:
-    st.markdown('<div class="section-title">Sobre a API ARIA — Sprint 3</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Sobre a API ARIA — Sprint 4 v4.0</div>', unsafe_allow_html=True)
 
     col_d1, col_d2 = st.columns(2)
     with col_d1:
@@ -301,6 +301,10 @@ with tab3:
             <span style="font-size:0.78rem">Probabilidade de violacao OLA</span><br><br>
             <code style="color:{GRAY1}">POST /predict/priority</code><br>
             <span style="font-size:0.78rem">Classificacao de prioridade (2-4)</span><br><br>
+            <code style="color:{GRAY1}">POST /explain/ola</code><br>
+            <span style="font-size:0.78rem">Predicao OLA + top 8 features SHAP</span><br><br>
+            <code style="color:{GRAY1}">POST /predict/ola/batch</code><br>
+            <span style="font-size:0.78rem">Batch ate 100 incidentes — retorna contagens por nivel</span><br><br>
             <code style="color:{GRAY1}">GET  /predictions/ola?limit=N</code><br>
             <span style="font-size:0.78rem">Historico persistido no Oracle ADB</span><br><br>
             <code style="color:{GRAY1}">GET  /encoders/info</code><br>

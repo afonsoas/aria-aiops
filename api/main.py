@@ -38,6 +38,10 @@ from api.db import check_connection, ensure_tables, insert_ola_prediction, \
 import joblib
 import numpy as np
 import scipy.sparse as sp
+import __main__
+from model.calibrator import _CalibratedXGB  # noqa: F401
+if not hasattr(__main__, "_CalibratedXGB"):
+    __main__._CalibratedXGB = _CalibratedXGB
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("aria.api")
