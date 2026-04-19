@@ -145,11 +145,11 @@ with col_result:
         prob  = float(model.predict_proba(X)[0][1])
         pct   = prob * 100
 
-        if pct >= 50:
+        if pct >= 25:
             cor, nivel, emoji = ORANGE, "ALTO RISCO", "🔴"
             bg_grad = "linear-gradient(135deg,rgba(255,107,53,0.18),rgba(255,107,53,0.06))"
             border  = "rgba(255,107,53,0.5)"
-        elif pct >= 25:
+        elif pct >= 10:
             cor, nivel, emoji = "#f39c12", "RISCO MEDIO", "🟠"
             bg_grad = "linear-gradient(135deg,rgba(243,156,18,0.15),rgba(243,156,18,0.05))"
             border  = "rgba(243,156,18,0.45)"
@@ -182,9 +182,9 @@ with col_result:
                 bgcolor="rgba(255,255,255,0.04)",
                 bordercolor="rgba(255,255,255,0.1)",
                 steps=[
-                    dict(range=[0, 25],  color="rgba(0,200,122,0.15)"),
-                    dict(range=[25, 50], color="rgba(243,156,18,0.15)"),
-                    dict(range=[50, 100],color="rgba(255,107,53,0.15)"),
+                    dict(range=[0, 10],  color="rgba(0,200,122,0.15)"),
+                    dict(range=[10, 25], color="rgba(243,156,18,0.15)"),
+                    dict(range=[25, 100],color="rgba(255,107,53,0.15)"),
                 ],
                 threshold=dict(line=dict(color=cor, width=3), thickness=0.75, value=pct),
             ),

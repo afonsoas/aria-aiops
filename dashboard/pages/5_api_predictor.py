@@ -144,9 +144,9 @@ with tab1:
                             bar=dict(color=cor, thickness=0.25),
                             bgcolor="rgba(255,255,255,0.04)",
                             steps=[
-                                dict(range=[0, 25],   color="rgba(0,200,122,0.12)"),
-                                dict(range=[25, 50],  color="rgba(243,156,18,0.12)"),
-                                dict(range=[50, 100], color="rgba(255,107,53,0.12)"),
+                                dict(range=[0, 10],   color="rgba(0,200,122,0.12)"),
+                                dict(range=[10, 25],  color="rgba(243,156,18,0.12)"),
+                                dict(range=[25, 100], color="rgba(255,107,53,0.12)"),
                             ],
                         ),
                     ))

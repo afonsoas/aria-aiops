@@ -84,7 +84,7 @@ def _gerar_incidente(i: int) -> dict:
     }
     prob  = predict_ola(ola_bundle, row)
     pct   = prob * 100
-    nivel = "ALTO" if pct >= 50 else ("MEDIO" if pct >= 25 else "BAIXO")
+    nivel = "ALTO" if pct >= 25 else ("MEDIO" if pct >= 10 else "BAIXO")
 
     prio_label = {2: "Alta", 3: "Media", 4: "Baixa"}.get(prio_num, str(prio_num))
     dia_label  = ["Seg","Ter","Qua","Qui","Sex","Sab","Dom"][dia]

@@ -149,9 +149,9 @@ def _predict_priority(row: dict) -> int:
 
 
 def _nivel_risco(pct: float) -> tuple[str, str]:
-    if pct >= 50:
-        return "ALTO", "Escalar imediatamente para o grupo responsavel."
     if pct >= 25:
+        return "ALTO", "Escalar imediatamente para o grupo responsavel."
+    if pct >= 10:
         return "MEDIO", "Monitorar; acionar time se sem resposta em 30 min."
     return "BAIXO", "Incidente dentro do padrao. Seguir fluxo standard."
 
