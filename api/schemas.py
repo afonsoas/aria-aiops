@@ -1,6 +1,6 @@
 """Pydantic schemas para a API ARIA."""
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -51,3 +51,34 @@ class HealthResponse(BaseModel):
     version: str
     modelos_carregados: bool
     db_conectado: bool
+
+
+class FeatureContribution(BaseModel):
+    feature: str
+    shap_value: float
+    direcao: str  # "aumenta" ou "reduz"
+
+
+class OLAExplanation(BaseModel):
+    """Predicao OLA com explicacao SHAP por feature."""
+    probabilidade: float
+    percentual: str
+    nivel_risco: str
+    recomendacao: str
+    base_value: float
+    top_features: List[FeatureContribution]
+    numero: Optional[str] = None
+    timestamp: datetime
+
+
+class BatchOLARequest(BaseModel):
+    """Payload para predicao em lote."""
+    incidents: List[IncidentInput] = Field(..., max_length=100)
+
+
+class BatchOLAResponse(BaseModel):
+    total: int
+    alto_risco: int
+    medio_risco: int
+    baixo_risco: int
+    predicoes: List[OLAPrediction]

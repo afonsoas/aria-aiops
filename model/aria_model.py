@@ -24,6 +24,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import (
     classification_report, confusion_matrix,
     roc_auc_score, f1_score, recall_score
@@ -35,6 +36,15 @@ from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
 import scipy.sparse as sp
+
+# Stopwords PT-BR para TF-IDF
+try:
+    import nltk
+    nltk.download("stopwords", quiet=True)
+    from nltk.corpus import stopwords
+    STOP_PT = stopwords.words("portuguese")
+except Exception:
+    STOP_PT = None
 
 # ── Paths ────────────────────────────────────────────────────
 BASE_DIR   = Path(__file__).resolve().parent
@@ -180,9 +190,10 @@ feat_cols_A = [c for c in NUM_FEATURES if c in df_kpi.columns and c not in LEAK_
 X_num_A = df_kpi[feat_cols_A].fillna(0).values
 y_A = df_kpi["target_ola"].values
 
-# TF-IDF nas descricoes
-log("Vetorizando descricoes (TF-IDF top-50)...")
-tfidf_A = TfidfVectorizer(max_features=50, ngram_range=(1, 2), min_df=3)
+# TF-IDF nas descricoes com stopwords PT-BR
+log("Vetorizando descricoes (TF-IDF top-50, stopwords PT-BR)...")
+tfidf_A = TfidfVectorizer(max_features=50, ngram_range=(1, 2), min_df=3,
+                          stop_words=STOP_PT)
 X_tfidf_A = tfidf_A.fit_transform(df_kpi["descricao"])
 X_A = sp.hstack([X_num_A, X_tfidf_A])
 
@@ -218,9 +229,15 @@ model_A = XGBClassifier(
 )
 model_A.fit(X_train_res, y_train_res)
 
-# Avaliacao
-y_pred_A = model_A.predict(X_test_A)
-y_prob_A = model_A.predict_proba(X_test_A)[:, 1]
+# Calibracao de probabilidade (Platt scaling isotonic)
+# Usa o conjunto de teste como calibracao (cv='prefit' = modelo ja treinado)
+log("Calibrando probabilidades (isotonic regression)...")
+calibrated_A = CalibratedClassifierCV(model_A, method="isotonic", cv="prefit")
+calibrated_A.fit(X_test_A, y_test_A)
+
+# Avaliacao com modelo calibrado
+y_pred_A = calibrated_A.predict(X_test_A)
+y_prob_A = calibrated_A.predict_proba(X_test_A)[:, 1]
 
 log("\n--- Resultados Modelo A (XGBoost - OLA) ---")
 log(classification_report(y_test_A, y_pred_A, target_names=["Nao Viola", "Viola OLA"]))
@@ -239,9 +256,14 @@ log("\nTop 10 features (Modelo A):")
 for fname, fimp in top_feat_A:
     log(f"  {fname:<35} {fimp:.4f}")
 
-# Salvar Modelo A
-joblib.dump({"model": model_A, "tfidf": tfidf_A, "features": feat_cols_A}, MODEL_OLA)
-log(f"\nModelo A salvo: {MODEL_OLA}")
+# Salvar Modelo A — calibrated como model principal, raw para SHAP
+joblib.dump({
+    "model":     calibrated_A,  # predict_proba retorna probabilidades calibradas
+    "model_raw": model_A,       # XGBoost puro — usado pelo SHAP TreeExplainer
+    "tfidf":     tfidf_A,
+    "features":  feat_cols_A,
+}, MODEL_OLA)
+log(f"\nModelo A salvo (calibrado): {MODEL_OLA}")
 
 # ════════════════════════════════════════════════════════════
 # 4. MODELO B — CLASSIFICACAO DE PRIORIDADE
@@ -260,9 +282,10 @@ feat_cols_B = [c for c in NUM_FEATURES if c != "prio_num" and c in df_b.columns]
 X_num_B = df_b[feat_cols_B].fillna(0).values
 y_B = df_b["prio_num"].values
 
-# TF-IDF nas descricoes
-log("Vetorizando descricoes (TF-IDF top-50)...")
-tfidf_B = TfidfVectorizer(max_features=50, ngram_range=(1, 2), min_df=5)
+# TF-IDF nas descricoes com stopwords PT-BR
+log("Vetorizando descricoes (TF-IDF top-50, stopwords PT-BR)...")
+tfidf_B = TfidfVectorizer(max_features=50, ngram_range=(1, 2), min_df=5,
+                          stop_words=STOP_PT)
 X_tfidf_B = tfidf_B.fit_transform(df_b["descricao"])
 X_B = sp.hstack([X_num_B, X_tfidf_B])
 

@@ -1,4 +1,4 @@
-"""Pagina 3 — Preditor de Violacao OLA."""
+"""Pagina 3 — Preditor de Violacao OLA com Explicacao SHAP."""
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -8,15 +8,27 @@ st.set_page_config(page_title="Preditor OLA — ARIA", layout="wide", page_icon=
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from dashboard.utils.theme import inject_css, kpi_card, apply_plotly_theme, section_title
-from dashboard.utils.theme import BLUE, CYAN, ORANGE, GREEN, PURPLE, GRAY1, GRAY2, NAVY, NAVY2
+from dashboard.utils.theme import inject_css, apply_plotly_theme, section_title
+from dashboard.utils.theme import BLUE, CYAN, ORANGE, GREEN, GRAY1, GRAY2, NAVY
 from dashboard.utils.data_loader import load_data
-from dashboard.utils.model_loader import load_models, predict_ola
+from dashboard.utils.model_loader import load_models
 
 inject_css()
 df     = load_data()
 models = load_models()
 ola_bundle, prio_bundle, encoders = models
+
+# ── SHAP explainer (cache por sessao) ────────────────────────
+@st.cache_resource(show_spinner=False)
+def _get_shap_explainer(bundle):
+    try:
+        import shap
+        raw = bundle.get("model_raw", bundle["model"])
+        return shap.TreeExplainer(raw)
+    except Exception:
+        return None
+
+explainer = _get_shap_explainer(ola_bundle)
 
 # ── Header ───────────────────────────────────────────────────
 st.markdown("""
@@ -27,7 +39,7 @@ st.markdown("""
               background:linear-gradient(90deg,transparent,#00C87A,#105BD8,transparent)"></div>
   <span style="color:#fff;font-size:1.25rem;font-weight:700">🔮 Preditor de Violacao OLA</span>
   <span style="color:#8899bb;font-size:0.82rem;margin-left:1rem">
-      Modelo A: XGBoost + SMOTE &nbsp;·&nbsp; ROC-AUC 0.84 &nbsp;·&nbsp; Recall 60%
+      Modelo A: XGBoost + SMOTE &nbsp;·&nbsp; ROC-AUC 0.84 &nbsp;·&nbsp; Recall 60% &nbsp;·&nbsp; SHAP Explicavel
   </span>
 </div>
 """, unsafe_allow_html=True)
@@ -74,6 +86,9 @@ with col_result:
     st.markdown('<div class="section-title">Resultado da Predicao</div>', unsafe_allow_html=True)
 
     if submitted:
+        import datetime as _dt
+        import scipy.sparse as sp
+
         prio_num = int(prio.strip()[0])
         dia_num  = ["Segunda","Terca","Quarta","Quinta","Sexta","Sabado","Domingo"].index(dia)
 
@@ -83,7 +98,6 @@ with col_result:
             try:   return int(le.transform([val])[0])
             except: return 0
 
-        import datetime as _dt
         row = {
             "prio_num":           prio_num,
             "hora_abertura":      hora,
@@ -100,8 +114,15 @@ with col_result:
             "descricao":          descricao,
         }
 
-        prob = predict_ola(ola_bundle, row)
-        pct  = prob * 100
+        # Predicao
+        model = ola_bundle["model"]
+        tfidf = ola_bundle["tfidf"]
+        feats = ola_bundle["features"]
+        num   = np.array([[row.get(f, 0) for f in feats]])
+        txt   = tfidf.transform([row.get("descricao", "")])
+        X     = sp.hstack([num, txt])
+        prob  = float(model.predict_proba(X)[0][1])
+        pct   = prob * 100
 
         if pct >= 50:
             cor, nivel, emoji = ORANGE, "ALTO RISCO", "🔴"
@@ -116,7 +137,6 @@ with col_result:
             bg_grad = "linear-gradient(135deg,rgba(0,200,122,0.15),rgba(0,200,122,0.05))"
             border  = "rgba(0,200,122,0.45)"
 
-        # Card principal do resultado
         st.markdown(f"""
         <div style="background:{bg_grad};border:1px solid {border};border-radius:14px;
                     padding:1.5rem;text-align:center;margin-bottom:1rem">
@@ -130,14 +150,13 @@ with col_result:
         </div>
         """, unsafe_allow_html=True)
 
-        # Gauge Plotly
+        # Gauge
         fig_g = go.Figure(go.Indicator(
             mode="gauge+number",
             value=pct,
             number=dict(suffix="%", font=dict(color=cor, size=28)),
             gauge=dict(
-                axis=dict(range=[0, 100], tickcolor=GRAY2,
-                          tickfont=dict(color=GRAY2, size=10)),
+                axis=dict(range=[0, 100], tickcolor=GRAY2, tickfont=dict(color=GRAY2, size=10)),
                 bar=dict(color=cor, thickness=0.25),
                 bgcolor="rgba(255,255,255,0.04)",
                 bordercolor="rgba(255,255,255,0.1)",
@@ -153,28 +172,52 @@ with col_result:
         fig_g.update_layout(height=200, margin=dict(l=20, r=20, t=10, b=10))
         st.plotly_chart(fig_g, use_container_width=True, config={"scrollZoom": False, "displayModeBar": False})
 
-        # Feature importance
-        st.markdown(f'<div class="section-title" style="margin-top:0.5rem">Fatores do Modelo</div>', unsafe_allow_html=True)
-        feat_names  = ola_bundle["features"] + ola_bundle["tfidf"].get_feature_names_out().tolist()
-        importances = ola_bundle["model"].feature_importances_
-        top6 = sorted(zip(feat_names, importances), key=lambda x: x[1], reverse=True)[:6]
-        max_imp = max(v for _, v in top6) or 1.0
+        # ── SHAP — explicacao por instancia ──────────────────
+        st.markdown(f'<div class="section-title" style="margin-top:0.5rem">📊 Explicacao IA (SHAP)</div>', unsafe_allow_html=True)
 
-        feats_html = ""
-        for fname, fimp in top6:
-            pct_bar = fimp / max_imp * 100
-            feats_html += f"""
-            <div style="margin-bottom:0.5rem">
-              <div style="display:flex;justify-content:space-between;
-                          font-size:0.78rem;color:{GRAY1};margin-bottom:3px">
-                <span>{fname}</span><span style="color:{CYAN}">{fimp:.3f}</span>
-              </div>
-              <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:6px">
-                <div style="background:linear-gradient(90deg,{BLUE},{CYAN});
-                            width:{pct_bar:.0f}%;height:6px;border-radius:4px"></div>
-              </div>
-            </div>"""
-        st.markdown(feats_html, unsafe_allow_html=True)
+        feat_names = feats + tfidf.get_feature_names_out().tolist()
+
+        if explainer is not None:
+            try:
+                shap_vals  = explainer.shap_values(X.toarray())
+                base_value = float(explainer.expected_value)
+                pairs = sorted(zip(feat_names, shap_vals[0]), key=lambda x: abs(x[1]), reverse=True)[:8]
+
+                # Waterfall chart SHAP
+                names_shap = [p[0] for p in pairs]
+                vals_shap  = [p[1] for p in pairs]
+                colors_bar = ["#FF6B35" if v > 0 else "#00C87A" for v in vals_shap]
+
+                fig_shap = go.Figure(go.Bar(
+                    x=vals_shap,
+                    y=names_shap,
+                    orientation="h",
+                    marker_color=colors_bar,
+                    text=[f"{v:+.3f}" for v in vals_shap],
+                    textposition="outside",
+                    textfont=dict(color=GRAY1, size=10),
+                ))
+                apply_plotly_theme(fig_shap)
+                fig_shap.update_layout(
+                    height=260,
+                    margin=dict(l=0, r=60, t=10, b=10),
+                    xaxis_title="Contribuicao SHAP",
+                    yaxis=dict(autorange="reversed"),
+                )
+                fig_shap.add_vline(x=0, line_color="rgba(255,255,255,0.3)", line_width=1)
+                st.plotly_chart(fig_shap, use_container_width=True,
+                                config={"scrollZoom": False, "displayModeBar": False})
+
+                st.markdown(
+                    f'<div style="font-size:0.75rem;color:{GRAY2};margin-top:0.2rem">'
+                    f'🟠 vermelho = aumenta risco &nbsp;·&nbsp; 🟢 verde = reduz risco &nbsp;·&nbsp; '
+                    f'valor base: <b>{base_value:.3f}</b></div>',
+                    unsafe_allow_html=True,
+                )
+            except Exception:
+                _show_importance_fallback(feat_names, ola_bundle)
+        else:
+            _show_importance_fallback(feat_names, ola_bundle)
 
         # Recomendacao
         st.markdown("<br>", unsafe_allow_html=True)
@@ -186,7 +229,6 @@ with col_result:
             st.success("**Normal:** Incidente dentro do padrao. Seguir fluxo standard.")
 
     else:
-        # Estado vazio estilizado
         st.markdown(f"""
         <div style="background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.12);
                     border-radius:14px;padding:2.5rem;text-align:center;margin-top:1rem">
@@ -196,7 +238,7 @@ with col_result:
             </div>
             <div style="color:{GRAY2};font-size:0.82rem;margin-top:0.5rem">
                 O modelo retornara a probabilidade de violacao OLA<br>
-                com base nas features do incidente informado.
+                com explicacao SHAP por feature do incidente.
             </div>
         </div>
         <br>
@@ -206,7 +248,29 @@ with col_result:
             &bull; XGBoost com SMOTE (balanceamento da classe minoritaria)<br>
             &bull; ROC-AUC: <b style="color:{GRAY1}">0.84</b> &nbsp;·&nbsp;
                Recall: <b style="color:{GRAY1}">60%</b><br>
-            &bull; Treinado em 20.480 incidentes elegíveis para KPI<br>
+            &bull; SHAP TreeExplainer — explicacao por instancia (nao global)<br>
             &bull; Features: prioridade, hora, grupo, produto, categoria, descricao (TF-IDF)
         </div>
         """, unsafe_allow_html=True)
+
+
+def _show_importance_fallback(feat_names, bundle):
+    importances = bundle["model"].feature_importances_
+    top6 = sorted(zip(feat_names, importances), key=lambda x: x[1], reverse=True)[:6]
+    max_imp = max(v for _, v in top6) or 1.0
+    feats_html = ""
+    for fname, fimp in top6:
+        pct_bar = fimp / max_imp * 100
+        feats_html += f"""
+        <div style="margin-bottom:0.5rem">
+          <div style="display:flex;justify-content:space-between;
+                      font-size:0.78rem;color:{GRAY1};margin-bottom:3px">
+            <span>{fname}</span><span style="color:{CYAN}">{fimp:.3f}</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:4px;height:6px">
+            <div style="background:linear-gradient(90deg,{BLUE},{CYAN});
+                        width:{pct_bar:.0f}%;height:6px;border-radius:4px"></div>
+          </div>
+        </div>"""
+    st.markdown(feats_html, unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:0.75rem;color:{GRAY2}">Importancia global do modelo (SHAP nao disponivel)</div>', unsafe_allow_html=True)

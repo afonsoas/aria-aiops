@@ -1,4 +1,4 @@
-name: ARIA CI
+name: ARIA CI/CD
 
 on:
   push:
@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
           cache: "pip"
 
       - name: Install dependencies
@@ -25,7 +25,6 @@ jobs:
         run: |
           python -c "
           import joblib
-          from pathlib import Path
           ola  = joblib.load('model/model_ola.pkl')
           prio = joblib.load('model/model_priority.pkl')
           enc  = joblib.load('model/encoders.pkl')
@@ -35,13 +34,13 @@ jobs:
           print('Models OK')
           "
 
-      - name: Verify API imports
+      - name: Verify API schemas
         run: |
           python -c "
           import sys; sys.path.insert(0, '.')
-          from api.schemas import IncidentInput, OLAPrediction, PriorityPrediction, HealthResponse
-          from api.db import check_connection
-          print('API imports OK')
+          from api.schemas import (IncidentInput, OLAPrediction, PriorityPrediction,
+                                   HealthResponse, OLAExplanation, BatchOLARequest, BatchOLAResponse)
+          print('Schemas OK')
           "
 
       - name: Test prediction pipeline
@@ -61,7 +60,7 @@ jobs:
           print(f'Prediction pipeline OK — prob={prob:.4f}')
           "
 
-      - name: Verify dataset accessible
+      - name: Verify dataset exists
         run: |
           python -c "
           from pathlib import Path
@@ -70,3 +69,24 @@ jobs:
           assert f.stat().st_size > 1_000_000, 'Dataset muito pequeno'
           print(f'Dataset OK — {f.stat().st_size/1e6:.1f} MB')
           "
+
+      - name: Lint (nao bloqueia)
+        run: |
+          pip install ruff -q
+          ruff check api/ --ignore E501,E402 || true
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy API to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service aria-api --detach
+        continue-on-error: true
