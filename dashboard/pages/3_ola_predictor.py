@@ -41,15 +41,15 @@ def _show_importance_fallback(feat_names, bundle):
 
 # ── SHAP explainer (cache por sessao) ────────────────────────
 @st.cache_resource(show_spinner=False)
-def _get_shap_explainer(bundle):
+def _get_shap_explainer():
     try:
         import shap
-        raw = bundle.get("model_raw", bundle["model"])
+        raw = ola_bundle.get("model_raw", ola_bundle["model"])
         return shap.TreeExplainer(raw)
     except Exception:
         return None
 
-explainer = _get_shap_explainer(ola_bundle)
+explainer = _get_shap_explainer()
 
 # ── Header ───────────────────────────────────────────────────
 st.markdown("""
