@@ -81,6 +81,7 @@ em tempo real    ──►  TF-IDF + Stopwords PT-BR       ──►  API REST (
 | `POST` | `/predict/priority` | Classificação de prioridade (2, 3 ou 4) |
 | `POST` | `/explain/ola` | **Predição OLA + top 8 features SHAP explicadas** |
 | `GET` | `/predictions/ola?limit=N` | Histórico do Oracle ADB |
+| `GET` | `/model/metrics` | Métricas dos modelos (lidas do bundle treinado) |
 | `GET` | `/encoders/info` | Valores válidos nos encoders |
 | `GET` | `/docs` | Swagger UI interativo |
 

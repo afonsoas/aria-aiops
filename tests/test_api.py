@@ -102,6 +102,13 @@ def test_encoders_info(client):
                                 "subcategoria", "cod_fechamento"}
 
 
+def test_predictions_historico_offline(client):
+    # Sem credenciais de banco, o endpoint deve responder lista vazia (modo offline)
+    r = client.get("/predictions/ola?limit=10")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+
 def test_payload_invalido(client):
     r = client.post("/predict/ola", json={"prio_num": 99})
     assert r.status_code == 422  # fora do range 1-5
