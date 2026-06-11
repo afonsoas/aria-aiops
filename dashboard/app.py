@@ -13,6 +13,7 @@ st.set_page_config(
 
 from dashboard.utils.theme import inject_css, kpi_card, aria_header, CYAN, ORANGE, GREEN, PURPLE, BLUE
 from dashboard.utils.data_loader import load_data
+from dashboard.utils.model_loader import load_models
 
 inject_css()
 
@@ -59,8 +60,19 @@ for col, val, label, sub, cor in cards:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
+# Metricas lidas direto dos bundles treinados — nunca ficam desatualizadas
+_ola_b, _prio_b, _ = load_models()
+mA = _ola_b.get("metrics", {})
+mB = _prio_b.get("metrics", {})
+mA_txt = (f"ROC-AUC {mA.get('roc_auc', 0):.2f} &nbsp;·&nbsp; "
+          f"Precision {mA.get('precision', 0)*100:.0f}% · Recall {mA.get('recall', 0)*100:.0f}%")
+mA_sub = f"Treino {mA.get('n_treino', 0):,} · validacao {mA.get('n_validacao', 0):,} · teste {mA.get('n_teste', 0):,}".replace(",", ".")
+mB_txt = (f"F1-macro {mB.get('f1_macro', 0):.2f} &nbsp;·&nbsp; "
+          f"Accuracy {mB.get('accuracy', 0)*100:.0f}%")
+mB_sub = f"Treinado em {mB.get('n_treino', 0):,} incidentes".replace(",", ".")
+
 # Destaques
-st.markdown("""
+st.markdown(f"""
 <div style="
     display:grid;
     grid-template-columns: repeat(3,1fr);
@@ -73,8 +85,8 @@ st.markdown("""
                 letter-spacing:1px;margin-bottom:0.5rem">Modelo A — Predicao OLA</div>
     <div style="color:#fff;font-size:1.1rem;font-weight:700">XGBoost + SMOTE</div>
     <div style="color:#8899bb;font-size:0.82rem;margin-top:0.3rem">
-        ROC-AUC 0.86 &nbsp;·&nbsp; Precision 27% · Recall 14%<br>
-        Treinado em 20.480 incidentes elegíveis
+        {mA_txt}<br>
+        {mA_sub}
     </div>
   </div>
   <div style="background:rgba(0,200,122,0.10);border:1px solid rgba(0,200,122,0.3);
@@ -83,8 +95,8 @@ st.markdown("""
                 letter-spacing:1px;margin-bottom:0.5rem">Modelo B — Classificacao Prioridade</div>
     <div style="color:#fff;font-size:1.1rem;font-weight:700">Random Forest</div>
     <div style="color:#8899bb;font-size:0.82rem;margin-top:0.3rem">
-        F1-macro 0.90 &nbsp;·&nbsp; Accuracy 91%<br>
-        Treinado em 97.767 incidentes
+        {mB_txt}<br>
+        {mB_sub}
     </div>
   </div>
   <div style="background:rgba(255,107,53,0.10);border:1px solid rgba(255,107,53,0.3);
