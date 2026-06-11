@@ -116,13 +116,6 @@ header[data-testid="stHeader"] {
     position: relative;
     overflow: hidden;
 }
-.aria-header::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #00D4FF, #105BD8, transparent);
-}
 .aria-header h1 {
     color: #FFFFFF !important;
     margin: 0;
