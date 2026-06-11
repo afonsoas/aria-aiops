@@ -182,8 +182,6 @@ h1, h2, h3, h4 { color: #e2e8f8 !important; }
     font-weight: 600 !important;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    border-left: 3px solid #00D4FF;
-    padding-left: 0.6rem;
     margin-bottom: 0.8rem;
 }
 
