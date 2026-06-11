@@ -91,7 +91,7 @@ header[data-testid="stHeader"] {
 /* ── Sidebar ── */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #06101f 0%, #0a1628 100%) !important;
-    border-right: 1px solid rgba(0,212,255,0.15) !important;
+    border-right: none !important;
 }
 [data-testid="stSidebar"] * { color: #e2e8f8 !important; }
 [data-testid="stSidebar"] [data-testid="stSelectbox"] > div,
