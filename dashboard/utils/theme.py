@@ -65,7 +65,7 @@ ARIA_CSS = """
 [data-testid="stHeader"],
 header[data-testid="stHeader"] {
     background: #050e1f !important;
-    border-bottom: 1px solid rgba(0,212,255,0.08) !important;
+    border-bottom: none !important;
 }
 [data-testid="stToolbar"] {
     background: #050e1f !important;
@@ -85,8 +85,9 @@ header[data-testid="stHeader"] {
 #MainMenu { visibility: hidden; }
 [data-testid="stDecoration"] { display: none; }
 
-/* Remove padding excessivo */
-.block-container { padding-top: 1.2rem !important; padding-bottom: 1rem !important; }
+/* Padding superior: afasta o conteudo da barra fixa do Streamlit
+   para o cabecalho das paginas nao ficar escondido/cortado por ela */
+.block-container { padding-top: 3.5rem !important; padding-bottom: 1rem !important; }
 
 /* ── Sidebar ── */
 [data-testid="stSidebar"] {
