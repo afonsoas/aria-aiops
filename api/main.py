@@ -9,12 +9,17 @@ Endpoints:
   POST /predict/priority      — classificacao de prioridade
   POST /explain/ola           — predicao OLA com explicacao SHAP
   GET  /predictions/ola       — historico de predicoes (DB)
+  GET  /model/metrics         — metricas dos modelos (do bundle treinado)
   GET  /encoders/info         — valores disponiveis nos encoders
+
+Autenticacao (opcional): defina a env var ARIA_API_KEY para exigir o
+header X-API-Key nos endpoints POST de predicao.
 
 Iniciar:
   uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 """
 
+import os
 import sys
 import logging
 import threading
@@ -22,8 +27,9 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional, List
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Security, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security.api_key import APIKeyHeader
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -61,6 +67,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Autenticacao opcional ─────────────────────────────────────
+# Se a env var ARIA_API_KEY estiver definida, os endpoints de predicao
+# exigem o header X-API-Key. Sem a env var, a API permanece aberta (demo).
+_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def require_api_key(key: Optional[str] = Security(_api_key_header)):
+    expected = os.getenv("ARIA_API_KEY", "")
+    if expected and key != expected:
+        raise HTTPException(401, "Header X-API-Key ausente ou invalido.")
 
 # ── Globais ───────────────────────────────────────────────────
 MODEL_DIR        = ROOT / "model"
@@ -156,17 +173,23 @@ def _nivel_risco(pct: float) -> tuple[str, str]:
     return "BAIXO", "Incidente dentro do padrao. Seguir fluxo standard."
 
 
-def _ola_prediction_from_row(payload: IncidentInput) -> OLAPrediction:
+def _ola_prediction_from_row(payload: IncidentInput,
+                             bg: Optional[BackgroundTasks] = None) -> OLAPrediction:
     row   = _build_row(payload)
     prob  = _predict_ola(row)
     pct   = prob * 100
     nivel, recomendacao = _nivel_risco(pct)
-    insert_ola_prediction(
+    insert_kwargs = dict(
         numero=payload.numero, prio_num=payload.prio_num,
         hora=payload.hora_abertura, dia=payload.dia_semana,
         is_monitoring=payload.is_monitoring, descricao=payload.descricao,
         grupo=payload.grupo, probabilidade=prob, nivel_risco=nivel,
     )
+    # Persistencia fora do caminho critico do request quando possivel
+    if bg is not None:
+        bg.add_task(insert_ola_prediction, **insert_kwargs)
+    else:
+        insert_ola_prediction(**insert_kwargs)
     return OLAPrediction(
         probabilidade=round(prob, 4),
         percentual=f"{pct:.1f}%",
@@ -188,16 +211,18 @@ def health():
     )
 
 
-@app.post("/predict/ola", response_model=OLAPrediction, tags=["Predicao"])
-def predict_ola(payload: IncidentInput):
+@app.post("/predict/ola", response_model=OLAPrediction, tags=["Predicao"],
+          dependencies=[Security(require_api_key)])
+def predict_ola(payload: IncidentInput, background_tasks: BackgroundTasks):
     """Calcula a probabilidade de violacao de OLA para um incidente."""
     if not _models_ok:
         raise HTTPException(503, "Modelos nao carregados. Aguarde o startup.")
-    return _ola_prediction_from_row(payload)
+    return _ola_prediction_from_row(payload, bg=background_tasks)
 
 
-@app.post("/predict/ola/batch", response_model=BatchOLAResponse, tags=["Predicao"])
-def predict_ola_batch(payload: BatchOLARequest):
+@app.post("/predict/ola/batch", response_model=BatchOLAResponse, tags=["Predicao"],
+          dependencies=[Security(require_api_key)])
+def predict_ola_batch(payload: BatchOLARequest, background_tasks: BackgroundTasks):
     """
     Predicao OLA em lote — ate 100 incidentes por chamada.
     Util para processar filas de incidentes abertos simultaneamente.
@@ -205,7 +230,8 @@ def predict_ola_batch(payload: BatchOLARequest):
     if not _models_ok:
         raise HTTPException(503, "Modelos nao carregados. Aguarde o startup.")
 
-    predicoes = [_ola_prediction_from_row(inc) for inc in payload.incidents]
+    predicoes = [_ola_prediction_from_row(inc, bg=background_tasks)
+                 for inc in payload.incidents]
     alto   = sum(1 for p in predicoes if p.nivel_risco == "ALTO")
     medio  = sum(1 for p in predicoes if p.nivel_risco == "MEDIO")
     baixo  = sum(1 for p in predicoes if p.nivel_risco == "BAIXO")
@@ -219,7 +245,8 @@ def predict_ola_batch(payload: BatchOLARequest):
     )
 
 
-@app.post("/explain/ola", response_model=OLAExplanation, tags=["Predicao"])
+@app.post("/explain/ola", response_model=OLAExplanation, tags=["Predicao"],
+          dependencies=[Security(require_api_key)])
 def explain_ola(payload: IncidentInput):
     """
     Predicao OLA com explicacao SHAP — mostra quais features mais
@@ -286,8 +313,9 @@ def explain_ola(payload: IncidentInput):
     )
 
 
-@app.post("/predict/priority", response_model=PriorityPrediction, tags=["Predicao"])
-def predict_priority(payload: IncidentInput):
+@app.post("/predict/priority", response_model=PriorityPrediction, tags=["Predicao"],
+          dependencies=[Security(require_api_key)])
+def predict_priority(payload: IncidentInput, background_tasks: BackgroundTasks):
     """Classifica a prioridade esperada de um incidente (2=Alta, 3=Media, 4=Baixa)."""
     if not _models_ok:
         raise HTTPException(503, "Modelos nao carregados. Aguarde o startup.")
@@ -296,7 +324,8 @@ def predict_priority(payload: IncidentInput):
     prio_pred = _predict_priority(row)
     labels = {1: "1 - Critica", 2: "2 - Alta", 3: "3 - Media", 4: "4 - Baixa", 5: "5 - Muito Baixa"}
 
-    insert_priority_prediction(
+    background_tasks.add_task(
+        insert_priority_prediction,
         numero=payload.numero, prio_num_entrada=payload.prio_num,
         prioridade_predita=prio_pred, descricao=payload.descricao,
         grupo=payload.grupo,
@@ -314,6 +343,20 @@ def predict_priority(payload: IncidentInput):
 def get_ola_predictions(limit: int = Query(100, ge=1, le=500)):
     """Retorna as ultimas predicoes OLA persistidas no Oracle ADB."""
     return fetch_recent_ola_predictions(limit)
+
+
+@app.get("/model/metrics", tags=["Sistema"])
+def model_metrics():
+    """
+    Metricas de avaliacao dos modelos em producao — lidas direto dos bundles
+    treinados (fonte unica de verdade, sem numeros hardcoded).
+    """
+    if not _models_ok:
+        raise HTTPException(503, "Modelos nao carregados. Aguarde o startup.")
+    return {
+        "modelo_ola":        _ola_bundle.get("metrics", {}),
+        "modelo_prioridade": _priority_bundle.get("metrics", {}),
+    }
 
 
 @app.get("/encoders/info", tags=["Sistema"])

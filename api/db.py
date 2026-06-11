@@ -4,7 +4,6 @@ Usa oracledb (thin mode — sem Oracle Client instalado).
 """
 import os
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -24,8 +23,14 @@ DB_DSN      = os.getenv("ARIA_DB_DSN",      "")   # host:port/service_name
 WALLET_DIR  = os.getenv("ARIA_WALLET_DIR",  "")   # pasta com wallet baixado do OCI
 
 
-def _get_connection():
-    """Abre uma conexao com o ADB. Retorna None se credenciais nao configuradas."""
+_pool = None
+
+
+def _get_pool():
+    """Cria (lazy) e retorna o pool de conexoes. None se credenciais ausentes."""
+    global _pool
+    if _pool is not None:
+        return _pool
     if not ORACLEDB_AVAILABLE:
         logger.warning("oracledb nao instalado — modo offline")
         return None
@@ -33,21 +38,32 @@ def _get_connection():
         logger.warning("Credenciais DB nao configuradas (ARIA_DB_USER / ARIA_DB_PASSWORD / ARIA_DB_DSN)")
         return None
 
+    kwargs = dict(user=DB_USER, password=DB_PASSWORD, dsn=DB_DSN,
+                  min=1, max=4, increment=1)
+    if WALLET_DIR and Path(WALLET_DIR).exists():
+        kwargs.update(
+            config_dir=WALLET_DIR,
+            wallet_location=WALLET_DIR,
+            wallet_password=os.getenv("ARIA_WALLET_PASSWORD", DB_PASSWORD),
+        )
     try:
-        if WALLET_DIR and Path(WALLET_DIR).exists():
-            conn = oracledb.connect(
-                user=DB_USER,
-                password=DB_PASSWORD,
-                dsn=DB_DSN,
-                config_dir=WALLET_DIR,
-                wallet_location=WALLET_DIR,
-                wallet_password=os.getenv("ARIA_WALLET_PASSWORD", DB_PASSWORD),
-            )
-        else:
-            conn = oracledb.connect(user=DB_USER, password=DB_PASSWORD, dsn=DB_DSN)
-        return conn
+        _pool = oracledb.create_pool(**kwargs)
+        logger.info("Pool Oracle criado (min=1, max=4).")
+        return _pool
     except Exception as exc:
-        logger.error("Falha ao conectar ao Oracle ADB: %s", exc)
+        logger.error("Falha ao criar pool Oracle ADB: %s", exc)
+        return None
+
+
+def _get_connection():
+    """Pega uma conexao do pool. Retorna None se pool indisponivel."""
+    pool = _get_pool()
+    if pool is None:
+        return None
+    try:
+        return pool.acquire()
+    except Exception as exc:
+        logger.error("Falha ao adquirir conexao do pool: %s", exc)
         return None
 
 
