@@ -19,7 +19,7 @@ jobs:
           cache: "pip"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest httpx
 
       - name: Verify models load
         run: |
@@ -28,37 +28,14 @@ jobs:
           ola  = joblib.load('model/model_ola.pkl')
           prio = joblib.load('model/model_priority.pkl')
           enc  = joblib.load('model/encoders.pkl')
-          assert 'model' in ola and 'tfidf' in ola
-          assert 'model' in prio and 'tfidf' in prio
+          assert 'model' in ola and 'tfidf' in ola and 'metrics' in ola
+          assert 'model' in prio and 'tfidf' in prio and 'metrics' in prio
           assert len(enc) == 5
-          print('Models OK')
+          print('Models OK —', ola['metrics'])
           "
 
-      - name: Verify API schemas
-        run: |
-          python -c "
-          import sys; sys.path.insert(0, '.')
-          from api.schemas import (IncidentInput, OLAPrediction, PriorityPrediction,
-                                   HealthResponse, OLAExplanation, BatchOLARequest, BatchOLAResponse)
-          print('Schemas OK')
-          "
-
-      - name: Test prediction pipeline
-        run: |
-          python -c "
-          import joblib, numpy as np, scipy.sparse as sp
-          ola = joblib.load('model/model_ola.pkl')
-          row = {'prio_num':3,'hora_abertura':10,'dia_semana':0,'mes':4,
-                 'is_monitoring':1,'has_parent':0,'produto_enc':0,'grupo_enc':0,
-                 'categoria_enc':0,'subcategoria_enc':0,'cod_fechamento_enc':0,
-                 'descricao':'Problem: Check Application Monitoring'}
-          num = np.array([[row.get(f,0) for f in ola['features']]])
-          txt = ola['tfidf'].transform([row['descricao']])
-          X   = sp.hstack([num, txt])
-          prob = float(ola['model'].predict_proba(X)[0][1])
-          assert 0.0 <= prob <= 1.0, f'Prob fora do range: {prob}'
-          print(f'Prediction pipeline OK — prob={prob:.4f}')
-          "
+      - name: Run test suite (pytest)
+        run: pytest tests/ -v
 
       - name: Verify dataset exists
         run: |
@@ -75,18 +52,7 @@ jobs:
           pip install ruff -q
           ruff check api/ --ignore E501,E402 || true
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy API to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service aria-api --detach
-        continue-on-error: true
+  # Deploy: o servico no Railway foi desativado (free tier expirado).
+  # O redeploy recomendado e no Render via render.yaml (autoDeploy: true —
+  # o proprio Render faz deploy a cada push na main apos conectar o repo).
+  # Passo a passo: docs/DEPLOY_RENDER.md

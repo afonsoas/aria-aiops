@@ -1,9 +1,14 @@
 name: Keep Oracle ADB Alive
 
+# DESATIVADO TEMPORARIAMENTE: a API no Railway foi desligada (free tier
+# expirado), entao nao ha endpoint para pingar. Apos o redeploy no Render
+# (ver docs/DEPLOY_RENDER.md):
+#   1. Trocar a URL abaixo pela URL nova da API
+#   2. Descomentar o bloco `schedule`
 on:
-  schedule:
-    - cron: '0 8 */5 * *'   # a cada 5 dias, 8h UTC
-  workflow_dispatch:          # permite rodar manualmente pelo GitHub Actions
+  # schedule:
+  #   - cron: '0 8 */5 * *'   # a cada 5 dias, 8h UTC
+  workflow_dispatch:           # permite rodar manualmente pelo GitHub Actions
 
 jobs:
   ping:
@@ -11,5 +16,5 @@ jobs:
     steps:
       - name: Ping ARIA API (mantém conexão Oracle ADB ativa)
         run: |
-          curl -f https://aria-api-production.up.railway.app/health
+          curl -f https://SUBSTITUIR-PELA-URL-DO-RENDER/health
           echo "Oracle ADB ping OK"

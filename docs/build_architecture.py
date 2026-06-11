@@ -306,7 +306,7 @@ class FullArchDiagram(Flowable):
         box(x_ml1, y_ml, bw_ml, bh_ml, colors.HexColor("#0d1f45"), PURPLE)
         label(x_ml1 + bw_ml/2, y_ml + bh_ml/2 + 3, "Modelo A — XGBoost", size=7.5, color=PURPLE)
         label(x_ml1 + bw_ml/2, y_ml + bh_ml/2 - 5, "Predicao OLA", "Helvetica", 6.5, GRAY2)
-        label(x_ml1 + bw_ml/2, y_ml + bh_ml/2 - 14, "ROC-AUC 0.86 | Precision 27%", "Helvetica", 6, GRAY2)
+        label(x_ml1 + bw_ml/2, y_ml + bh_ml/2 - 14, "ROC-AUC 0.80 | Precision 24%", "Helvetica", 6, GRAY2)
         box(x_ml2, y_ml, bw_ml, bh_ml, colors.HexColor("#0d1f45"), GREEN)
         label(x_ml2 + bw_ml/2, y_ml + bh_ml/2 + 3, "Modelo B — RandomForest", size=7.5, color=GREEN)
         label(x_ml2 + bw_ml/2, y_ml + bh_ml/2 - 5, "Classificacao Prioridade", "Helvetica", 6.5, GRAY2)
@@ -741,7 +741,7 @@ story.append(spacer(0.2))
 story.append(metrics_row([
     ("122.543", "Incidentes/ano", BLUE),
     ("248", "Violações OLA", ORANGE),
-    ("0.86", "ROC-AUC Modelo A", GREEN),
+    ("0.80", "ROC-AUC Modelo A", GREEN),
     ("0.89", "F1-macro Modelo B", PURPLE),
 ]))
 story.append(spacer(0.4))
@@ -749,7 +749,7 @@ story.append(spacer(0.4))
 story.append(Paragraph("Componentes Principais — Sprint 4 v4.0", sH2))
 story.append(kv_table([
     ("Dataset",       "LW-DATASET.xlsx — 122.543 incidentes Locaweb (Jan/2023–Dez/2025), 19 colunas"),
-    ("Modelo A",      "XGBoost + SMOTE + Calibração Isotônica — predição OLA (ROC-AUC 0.86, Precision 27%, threshold 0.167)"),
+    ("Modelo A",      "XGBoost + SMOTE + Calibração Isotônica — predição OLA (ROC-AUC 0.80, Precision 24%, threshold 0.143)"),
     ("Modelo B",      "Random Forest — classificação multiclasse de prioridade 2/3/4 (F1-macro 0.89)"),
     ("NLP",           "TF-IDF top-50 tokens + Stopwords PT-BR (NLTK), concatenado via scipy.sparse"),
     ("Explicabilidade","SHAP TreeExplainer — top 8 features por instância, waterfall chart no dashboard"),
@@ -894,7 +894,7 @@ story.append(kv_table([
     ("Calibração",     "IsotonicRegression fit nos scores brutos do conjunto de teste — probabilidades calibradas"),
     ("Threshold",      "0.1667 — selecionado via precision_recall_curve maximizando F1 (vs 0.5 padrão)"),
     ("Features",       "10 numéricas + TF-IDF top-50 tokens + Stopwords PT-BR = vetor de 60 dimensões"),
-    ("ROC-AUC",        "0.8614  |  Precision: 27%  |  Recall: 14%  |  F1: 0.18"),
+    ("ROC-AUC",        "0.8028  |  Precision: 24%  |  Recall: 18%  |  F1: 0.20"),
     ("Thresholds risco","ALTO ≥ 25% | MÉDIO ≥ 10% | BAIXO < 10% — ajustados para probs. calibradas"),
     ("Explicabilidade", "SHAP TreeExplainer — top 8 features por instância, waterfall chart no dashboard"),
 ]))
@@ -1285,7 +1285,7 @@ story.append(spacer(0.3))
 
 story.append(Paragraph("Métricas dos Modelos ML", sH2))
 story.append(metrics_row([
-    ("0.84",  "ROC-AUC Modelo A", PURPLE),
+    ("0.80",  "ROC-AUC Modelo A", PURPLE),
     ("60%",   "Recall Violações", ORANGE),
     ("0.90",  "F1-Macro Modelo B", GREEN),
     ("91%",   "Accuracy Modelo B", BLUE),
@@ -1295,7 +1295,7 @@ story.append(spacer(0.3))
 story.append(Paragraph("Resultados Detalhados — Modelo A (OLA)", sH2))
 story.append(kv_table([
     ("Dataset teste",    "5.120 instâncias (20% de 25.600)  |  50 violações reais"),
-    ("Verdadeiros Positivos", "30 (de 50 violações → Recall 60%)"),
+    ("Verdadeiros Positivos", "9 (de 50 violações → Recall 18%)"),
     ("Falsos Positivos", "751 alertas incorretos (Precision 4% — trade-off aceitável)"),
     ("Verdadeiros Negativos", "4.319 não-violações corretamente identificadas"),
     ("Falsos Negativos", "20 violações perdidas (não alertadas)"),

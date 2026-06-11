@@ -17,41 +17,41 @@ Violacoes (target=1): 248 (0.97%)
 Nao violacoes (target=0): 25,352
 Vetorizando descricoes (TF-IDF top-50, stopwords PT-BR)...
 Shape X_A: (25600, 60)
-Treino: 20,480 | Teste: 5,120
+Treino: 16,384 | Validacao: 4,096 | Teste: 5,120
 Aplicando SMOTE...
-Apos SMOTE — pos: 20,282 | neg: 20,282
+Apos SMOTE — pos: 16,226 | neg: 16,226
 Treinando XGBoost...
-Calibrando probabilidades (isotonic post-hoc sobre scores brutos)...
-Threshold otimo para F1 maximo: 0.1667
+Calibrando probabilidades (isotonic na validacao)...
+Threshold otimo (validacao, F1 maximo): 0.1429
 
 --- Resultados Modelo A (XGBoost - OLA) ---
               precision    recall  f1-score   support
 
-   Nao Viola       0.99      1.00      0.99      5070
-   Viola OLA       0.27      0.14      0.18        50
+   Nao Viola       0.99      0.99      0.99      5070
+   Viola OLA       0.24      0.18      0.20        50
 
     accuracy                           0.99      5120
-   macro avg       0.63      0.57      0.59      5120
+   macro avg       0.61      0.59      0.60      5120
 weighted avg       0.98      0.99      0.99      5120
 
-ROC-AUC:  0.8614
-Recall (violacoes): 0.1400
-F1 (violacoes):     0.1842
+ROC-AUC:  0.8028
+Recall (violacoes): 0.1800
+F1 (violacoes):     0.2045
 Matriz de Confusao:
-[[5051   19]
- [  43    7]]
+[[5041   29]
+ [  41    9]]
 
 Top 10 features (Modelo A):
-  domain                              0.1578
-  not running                         0.0807
-  free disk                           0.0585
-  on port                             0.0577
-  recipes                             0.0497
-  grupo_enc                           0.0489
-  is_monitoring                       0.0433
-  on                                  0.0344
-  reativação                          0.0333
-  falha                               0.0293
+  grupo_enc                           0.1529
+  falha                               0.1205
+  dia_semana                          0.0815
+  type                                0.0552
+  is_monitoring                       0.0524
+  prio_num                            0.0447
+  serviço                             0.0406
+  problem                             0.0385
+  erro                                0.0309
+  produto_enc                         0.0295
 
 Modelo A salvo (calibrado): D:\AFONSO\aria-aiops\model\model_ola.pkl
 

@@ -36,10 +36,12 @@ from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
 import scipy.sparse as sp
-try:
-    from model.calibrator import _CalibratedXGB
-except ImportError:
-    from calibrator import _CalibratedXGB
+# Garante que o root do repo esta no path para que o pickle serialize
+# a classe como model.calibrator._CalibratedXGB (importavel na API e no dashboard)
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent)
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+from model.calibrator import _CalibratedXGB
 
 # Stopwords PT-BR para TF-IDF
 try:
@@ -203,11 +205,16 @@ X_A = sp.hstack([X_num_A, X_tfidf_A])
 
 log(f"Shape X_A: {X_A.shape}")
 
-# Split treino/teste estratificado (80/20)
-X_train_A, X_test_A, y_train_A, y_test_A = train_test_split(
+# Split estratificado 64/16/20: treino / validacao / teste
+# Validacao serve para calibracao e escolha de threshold;
+# o teste fica intocado ate a avaliacao final (sem vazamento).
+X_trainval_A, X_test_A, y_trainval_A, y_test_A = train_test_split(
     X_A, y_A, test_size=0.2, random_state=42, stratify=y_A
 )
-log(f"Treino: {X_train_A.shape[0]:,} | Teste: {X_test_A.shape[0]:,}")
+X_train_A, X_val_A, y_train_A, y_val_A = train_test_split(
+    X_trainval_A, y_trainval_A, test_size=0.2, random_state=42, stratify=y_trainval_A
+)
+log(f"Treino: {X_train_A.shape[0]:,} | Validacao: {X_val_A.shape[0]:,} | Teste: {X_test_A.shape[0]:,}")
 
 # SMOTE somente no conjunto de treino
 log("Aplicando SMOTE...")
@@ -215,17 +222,13 @@ sm = SMOTE(random_state=42, k_neighbors=5)
 X_train_res, y_train_res = sm.fit_resample(X_train_A, y_train_A)
 log(f"Apos SMOTE — pos: {y_train_res.sum():,} | neg: {(y_train_res==0).sum():,}")
 
-# XGBoost
+# XGBoost — sem scale_pos_weight: o SMOTE ja balanceia o treino,
+# e corrigir o desbalanceamento duas vezes distorce as probabilidades.
 log("Treinando XGBoost...")
-n_pos = (y_train_A == 1).sum()
-n_neg = (y_train_A == 0).sum()
-scale = n_neg / max(n_pos, 1)
-
 model_A = XGBClassifier(
     n_estimators=300,
     max_depth=6,
     learning_rate=0.05,
-    scale_pos_weight=scale,
     eval_metric="logloss",
     random_state=42,
     n_jobs=-1,
@@ -233,25 +236,26 @@ model_A = XGBClassifier(
 )
 model_A.fit(X_train_res, y_train_res)
 
-# Calibracao post-hoc: isotonic regression sobre scores brutos no conjunto de teste
-# (nao retreina o modelo — apenas ajusta a curva de probabilidade)
-log("Calibrando probabilidades (isotonic post-hoc sobre scores brutos)...")
+# Calibracao post-hoc: isotonic regression ajustada na VALIDACAO
+# (nao retreina o modelo — apenas ajusta a curva de probabilidade).
+# O conjunto de teste nao participa de nenhum ajuste.
+log("Calibrando probabilidades (isotonic na validacao)...")
 from sklearn.isotonic import IsotonicRegression
-raw_probs_test = model_A.predict_proba(X_test_A)[:, 1]
+raw_probs_val = model_A.predict_proba(X_val_A)[:, 1]
 ir = IsotonicRegression(out_of_bounds="clip")
-ir.fit(raw_probs_test, y_test_A)
+ir.fit(raw_probs_val, y_val_A)
 
-# Encontrar threshold otimo (maximiza F1 nas violacoes)
-from sklearn.metrics import precision_recall_curve
-_probs_calib = ir.predict(raw_probs_test)
-precision_c, recall_c, thresholds_c = precision_recall_curve(y_test_A, _probs_calib)
+# Threshold otimo (maximiza F1 nas violacoes) — tambem escolhido na validacao
+from sklearn.metrics import precision_recall_curve, precision_score
+_probs_calib_val = ir.predict(raw_probs_val)
+precision_c, recall_c, thresholds_c = precision_recall_curve(y_val_A, _probs_calib_val)
 f1_scores_c = 2 * precision_c * recall_c / (precision_c + recall_c + 1e-9)
 best_thresh = float(thresholds_c[f1_scores_c[:-1].argmax()])
-log(f"Threshold otimo para F1 maximo: {best_thresh:.4f}")
+log(f"Threshold otimo (validacao, F1 maximo): {best_thresh:.4f}")
 
 calibrated_A = _CalibratedXGB(model_A, ir, threshold=best_thresh)
 
-# Avaliacao com modelo calibrado e threshold otimo
+# Avaliacao final no conjunto de teste (intocado durante todo o ajuste)
 y_pred_A = calibrated_A.predict(X_test_A)
 y_prob_A = calibrated_A.predict_proba(X_test_A)[:, 1]
 
@@ -272,12 +276,26 @@ log("\nTop 10 features (Modelo A):")
 for fname, fimp in top_feat_A:
     log(f"  {fname:<35} {fimp:.4f}")
 
+# Metricas finais embutidas no bundle — fonte unica de verdade
+# para dashboard, API e documentacao (evita numeros desatualizados).
+metrics_A = {
+    "roc_auc":    round(float(roc_auc_score(y_test_A, y_prob_A)), 4),
+    "precision":  round(float(precision_score(y_test_A, y_pred_A, zero_division=0)), 4),
+    "recall":     round(float(recall_score(y_test_A, y_pred_A)), 4),
+    "f1":         round(float(f1_score(y_test_A, y_pred_A)), 4),
+    "threshold":  round(best_thresh, 4),
+    "n_treino":   int(X_train_A.shape[0]),
+    "n_validacao": int(X_val_A.shape[0]),
+    "n_teste":    int(X_test_A.shape[0]),
+}
+
 # Salvar Modelo A — calibrated como model principal, raw para SHAP
 joblib.dump({
     "model":     calibrated_A,  # predict_proba retorna probabilidades calibradas
     "model_raw": model_A,       # XGBoost puro — usado pelo SHAP TreeExplainer
     "tfidf":     tfidf_A,
     "features":  feat_cols_A,
+    "metrics":   metrics_A,
 }, MODEL_OLA)
 log(f"\nModelo A salvo (calibrado): {MODEL_OLA}")
 
@@ -343,8 +361,16 @@ log("\nTop 10 features (Modelo B):")
 for fname, fimp in top_feat_B:
     log(f"  {fname:<35} {fimp:.4f}")
 
-# Salvar Modelo B + encoders
-joblib.dump({"model": model_B, "tfidf": tfidf_B, "features": feat_cols_B}, MODEL_PRIORITY)
+# Salvar Modelo B + encoders (metricas embutidas no bundle)
+metrics_B = {
+    "f1_macro":    round(float(f1_score(y_test_B, y_pred_B, average="macro")), 4),
+    "f1_weighted": round(float(f1_score(y_test_B, y_pred_B, average="weighted")), 4),
+    "accuracy":    round(float((y_pred_B == y_test_B).mean()), 4),
+    "n_treino":    int(X_train_B.shape[0]),
+    "n_teste":     int(X_test_B.shape[0]),
+}
+joblib.dump({"model": model_B, "tfidf": tfidf_B, "features": feat_cols_B,
+             "metrics": metrics_B}, MODEL_PRIORITY)
 joblib.dump(encoders, ENCODERS_FILE)
 log(f"\nModelo B salvo: {MODEL_PRIORITY}")
 log(f"Encoders salvos: {ENCODERS_FILE}")

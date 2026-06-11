@@ -31,12 +31,17 @@ with st.sidebar:
     st.markdown(f'<div style="color:{CYAN};font-size:1.1rem;font-weight:700;margin-bottom:0.5rem">⚙️ Conexao API</div>', unsafe_allow_html=True)
     if st.button("🔄 Testar /health"):
         try:
-            r = requests.get(f"{API_BASE}/health", timeout=3)
+            r = requests.get(f"{API_BASE}/health", timeout=10)
             data = r.json()
-            if data.get("modelos_carregados"):
+            if r.status_code != 200 or data.get("status") != "ok":
+                # Resposta de erro do provedor de hosting (ex.: Railway/Render
+                # retornam 404 quando o app nao existe ou esta hibernando)
+                st.error("API fora do ar — o endereco respondeu, mas nao e a "
+                         "API ARIA (deploy inativo?). Ver docs/DEPLOY_RENDER.md")
+            elif data.get("modelos_carregados"):
                 st.success("API Online — Modelos carregados")
             else:
-                st.warning("API respondeu mas modelos nao carregados")
+                st.warning("API online, mas modelos ainda nao carregados (startup)")
             st.json(data)
         except Exception as e:
             st.error(f"Sem conexao: {e}")

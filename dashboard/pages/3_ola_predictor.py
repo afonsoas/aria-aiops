@@ -52,7 +52,11 @@ def _get_shap_explainer():
 explainer = _get_shap_explainer()
 
 # ── Header ───────────────────────────────────────────────────
-st.markdown("""
+_m = ola_bundle.get("metrics", {})
+_roc    = f"{_m.get('roc_auc', 0):.2f}"
+_recall = f"{_m.get('recall', 0)*100:.0f}%"
+_prec   = f"{_m.get('precision', 0)*100:.0f}%"
+st.markdown(f"""
 <div style="background:linear-gradient(90deg,#050e1f 0%,#0d2d6e 60%,#050e1f 100%);
             border:1px solid rgba(0,212,255,0.2);border-radius:12px;padding:1rem 1.5rem;
             margin-bottom:1rem;position:relative;overflow:hidden">
@@ -60,7 +64,7 @@ st.markdown("""
               background:linear-gradient(90deg,transparent,#00C87A,#105BD8,transparent)"></div>
   <span style="color:#fff;font-size:1.25rem;font-weight:700">🔮 Preditor de Violacao OLA</span>
   <span style="color:#8899bb;font-size:0.82rem;margin-left:1rem">
-      Modelo A: XGBoost + SMOTE &nbsp;·&nbsp; ROC-AUC 0.84 &nbsp;·&nbsp; Recall 60% &nbsp;·&nbsp; SHAP Explicavel
+      Modelo A: XGBoost + SMOTE &nbsp;·&nbsp; ROC-AUC {_roc} &nbsp;·&nbsp; Recall {_recall} &nbsp;·&nbsp; SHAP Explicavel
   </span>
 </div>
 """, unsafe_allow_html=True)
@@ -267,8 +271,10 @@ with col_result:
                     border-radius:10px;padding:1rem;font-size:0.82rem;color:{GRAY2}">
             <div style="color:{CYAN};font-weight:600;margin-bottom:0.5rem">Sobre o Modelo A</div>
             &bull; XGBoost com SMOTE (balanceamento da classe minoritaria)<br>
-            &bull; ROC-AUC: <b style="color:{GRAY1}">0.84</b> &nbsp;·&nbsp;
-               Recall: <b style="color:{GRAY1}">60%</b><br>
+            &bull; ROC-AUC: <b style="color:{GRAY1}">{_roc}</b> &nbsp;·&nbsp;
+               Recall: <b style="color:{GRAY1}">{_recall}</b> &nbsp;·&nbsp;
+               Precision: <b style="color:{GRAY1}">{_prec}</b><br>
+            &bull; Calibracao isotonica + threshold escolhidos em validacao separada<br>
             &bull; SHAP TreeExplainer — explicacao por instancia (nao global)<br>
             &bull; Features: prioridade, hora, grupo, produto, categoria, descricao (TF-IDF)
         </div>
