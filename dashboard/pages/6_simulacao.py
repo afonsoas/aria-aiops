@@ -109,8 +109,6 @@ st.markdown("""
 <div style="background:linear-gradient(90deg,#050e1f 0%,#1a0540 60%,#050e1f 100%);
             border:1px solid rgba(124,58,237,0.35);border-radius:12px;padding:1rem 1.5rem;
             margin-bottom:1rem;position:relative;overflow:hidden">
-  <div style="position:absolute;top:0;left:0;right:0;height:2px;
-              background:linear-gradient(90deg,transparent,#7C3AED,#00D4FF,transparent)"></div>
   <span style="color:#fff;font-size:1.25rem;font-weight:700">⚡ Simulacao de Incidentes em Tempo Real</span>
   <span style="color:#8899bb;font-size:0.82rem;margin-left:1rem">
       ARIA detecta riscos de violacao OLA conforme incidentes chegam

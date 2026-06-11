@@ -60,8 +60,6 @@ st.markdown(f"""
 <div style="background:linear-gradient(90deg,#050e1f 0%,#0d2d6e 60%,#050e1f 100%);
             border:1px solid rgba(0,212,255,0.2);border-radius:12px;padding:1rem 1.5rem;
             margin-bottom:1rem;position:relative;overflow:hidden">
-  <div style="position:absolute;top:0;left:0;right:0;height:2px;
-              background:linear-gradient(90deg,transparent,#00C87A,#105BD8,transparent)"></div>
   <span style="color:#fff;font-size:1.25rem;font-weight:700">🔮 Preditor de Violacao OLA</span>
   <span style="color:#8899bb;font-size:0.82rem;margin-left:1rem">
       Modelo A: XGBoost + SMOTE &nbsp;·&nbsp; ROC-AUC {_roc} &nbsp;·&nbsp; Recall {_recall} &nbsp;·&nbsp; SHAP Explicavel

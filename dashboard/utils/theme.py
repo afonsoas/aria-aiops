@@ -91,7 +91,7 @@ header[data-testid="stHeader"] {
 /* ── Sidebar ── */
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #06101f 0%, #0a1628 100%) !important;
-    border-right: 1px solid rgba(0,212,255,0.15) !important;
+    border-right: none !important;
 }
 [data-testid="stSidebar"] * { color: #e2e8f8 !important; }
 [data-testid="stSidebar"] [data-testid="stSelectbox"] > div,
@@ -115,13 +115,6 @@ header[data-testid="stHeader"] {
     margin-bottom: 1.2rem;
     position: relative;
     overflow: hidden;
-}
-.aria-header::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #00D4FF, #105BD8, transparent);
 }
 .aria-header h1 {
     color: #FFFFFF !important;
