@@ -327,7 +327,7 @@ with tab3:
                 # Iniciar API<br>
                 uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload<br><br>
                 # Documentacao interativa<br>
-                http://localhost:8000/docs
+                {API_BASE}/docs
             </div>
             <div style="color:{GRAY2};font-size:0.78rem">
                 Variaveis de ambiente para Oracle ADB:<br>
@@ -341,7 +341,7 @@ with tab3:
     <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
                 border-radius:10px;padding:1rem;font-size:0.82rem;color:{GRAY2};margin-top:0.5rem">
         <div style="color:{GRAY1};font-weight:600;margin-bottom:0.5rem">Exemplo de requisicao cURL</div>
-        <code style="color:{CYAN}">curl -X POST http://localhost:8000/predict/ola \\<br>
+        <code style="color:{CYAN}">curl -X POST {API_BASE}/predict/ola \\<br>
         &nbsp;&nbsp;-H "Content-Type: application/json" \\<br>
         &nbsp;&nbsp;-d '{{"prio_num": 3, "hora_abertura": 14, "dia_semana": 1, "mes": 6,<br>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"is_monitoring": 1, "has_parent": 0,<br>

@@ -52,35 +52,9 @@ if not hasattr(__main__, "_CalibratedXGB"):
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("aria.api")
 
-# ── App ───────────────────────────────────────────────────────
-app = FastAPI(
-    title="ARIA AIOps API",
-    description="Automated Response & Incident Analysis — Locaweb / FIAP Enterprise Challenge 2026",
-    version="4.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ── Autenticacao opcional ─────────────────────────────────────
-# Se a env var ARIA_API_KEY estiver definida, os endpoints de predicao
-# exigem o header X-API-Key. Sem a env var, a API permanece aberta (demo).
-_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
-
-
-def require_api_key(key: Optional[str] = Security(_api_key_header)):
-    expected = os.getenv("ARIA_API_KEY", "")
-    if expected and key != expected:
-        raise HTTPException(401, "Header X-API-Key ausente ou invalido.")
-
 # ── Globais ───────────────────────────────────────────────────
-MODEL_DIR        = ROOT / "model"
+ROOT_DIR         = Path(__file__).resolve().parent.parent
+MODEL_DIR        = ROOT_DIR / "model"
 _ola_bundle      = None
 _priority_bundle = None
 _encoders        = None
@@ -88,8 +62,7 @@ _models_ok       = False
 _ola_explainer   = None   # SHAP TreeExplainer
 
 
-@app.on_event("startup")
-async def startup_event():
+def _load_models():
     global _ola_bundle, _priority_bundle, _encoders, _models_ok, _ola_explainer
     try:
         _ola_bundle      = joblib.load(MODEL_DIR / "model_ola.pkl")
@@ -110,14 +83,52 @@ async def startup_event():
     except Exception as exc:
         logger.error("Falha ao carregar modelos: %s", exc)
 
-    def _init_db():
-        try:
-            ensure_tables()
-            logger.info("DB: tabelas verificadas/criadas.")
-        except Exception as exc:
-            logger.warning("ensure_tables falhou (modo offline): %s", exc)
-    threading.Thread(target=_init_db, daemon=True).start()
 
+def _init_db():
+    try:
+        ensure_tables()
+        logger.info("DB: tabelas verificadas/criadas.")
+    except Exception as exc:
+        logger.warning("ensure_tables falhou (modo offline): %s", exc)
+
+
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    _load_models()
+    threading.Thread(target=_init_db, daemon=True).start()
+    yield
+
+
+# ── App ───────────────────────────────────────────────────────
+app = FastAPI(
+    title="ARIA AIOps API",
+    description="Automated Response & Incident Analysis — Locaweb / FIAP Enterprise Challenge 2026",
+    version="4.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Autenticacao opcional ─────────────────────────────────────
+# Se a env var ARIA_API_KEY estiver definida, os endpoints de predicao
+# exigem o header X-API-Key. Sem a env var, a API permanece aberta (demo).
+_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def require_api_key(key: Optional[str] = Security(_api_key_header)):
+    expected = os.getenv("ARIA_API_KEY", "")
+    if expected and key != expected:
+        raise HTTPException(401, "Header X-API-Key ausente ou invalido.")
 
 # ── Helpers ───────────────────────────────────────────────────
 def _safe_encode(col: str, val: Optional[str]) -> int:
