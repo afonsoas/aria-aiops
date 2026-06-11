@@ -297,7 +297,7 @@ def build_story(styles):
         aria_table([
             ["Modelo", "Algoritmo", "Metrica Principal", "Dataset de Treino"],
             ["Modelo A — OLA", "XGBoost + SMOTE + Calibracao Isotonica",
-             "ROC-AUC: 0.86 | Precision: 27%", "20.480 incidentes elegíveis"],
+             "ROC-AUC: 0.80 | Precision: 24%", "25.600 incidentes elegíveis"],
             ["Modelo B — Prioridade", "Random Forest", "F1-macro: 0.89 | Accuracy: 90%",
              "97.767 incidentes"],
         ], [3.2*cm, 4.8*cm, 4.2*cm, 4.0*cm]),
@@ -377,7 +377,7 @@ def build_story(styles):
         sp(4),
         aria_table([
             ["Card", "Informacao"],
-            ["Modelo A — Predicao OLA", "XGBoost + SMOTE + Calibracao Isotonica | ROC-AUC 0.86 | Precision 27% | 20.480 incidentes"],
+            ["Modelo A — Predicao OLA", "XGBoost + SMOTE + Calibracao Isotonica | ROC-AUC 0.80 | Precision 24% | 25.600 incidentes elegiveis"],
             ["Modelo B — Classificacao Prioridade", "Random Forest | F1-macro 0.89 | Accuracy 90% | 97.767 incidentes"],
             ["Top Incidente", "Check Application Monitoring — 28.728 ocorrencias (23,4% do total)"],
         ], [5.5*cm, 10.0*cm]),
@@ -470,7 +470,7 @@ def build_story(styles):
         h1("6. Preditor OLA — Risco de Violacao"),
         line(CYAN, 1),
         sp(6),
-        p("<b>Modelo A:</b> XGBoost + SMOTE + Calibracao Isotonica | ROC-AUC 0.86 | Precision 27%"),
+        p("<b>Modelo A:</b> XGBoost + SMOTE + Calibracao Isotonica | ROC-AUC 0.80 | Precision 24%"),
         sp(4),
         p("Prevê a probabilidade calibrada de um <b>novo incidente</b> violar o OLA antes de ser "
           "formalmente aberto. Apos a predicao, o <b>SHAP TreeExplainer</b> decompoe a previsao "

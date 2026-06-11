@@ -3,7 +3,7 @@
 > *"Resposta certa, no tempo certo, pelo caminho certo."*
 
 [![Dashboard](https://img.shields.io/badge/Dashboard-Online-00C87A?logo=streamlit&logoColor=white)](https://afonsoas-aria-aiops-streamlit-app-wsp1zy.streamlit.app)
-[![API](https://img.shields.io/badge/API-Online-105BD8?logo=fastapi&logoColor=white)](https://aria-api-production.up.railway.app/health)
+[![API](https://img.shields.io/badge/API-Redeploy%20Pendente-FF6B35?logo=fastapi&logoColor=white)](docs/DEPLOY_RENDER.md)
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://python.org)
 [![Oracle](https://img.shields.io/badge/DB-Oracle%20ADB-F80000?logo=oracle)](https://www.oracle.com/cloud/free/)
 [![FIAP](https://img.shields.io/badge/FIAP-Enterprise%20Challenge%202026-ED1C24)](https://fiap.com.br)
@@ -14,9 +14,9 @@
 
 | Componente | URL | Status |
 |---|---|---|
-| **Dashboard** | [afonsoas-aria-aiops-streamlit-app-wsp1zy.streamlit.app](https://afonsoas-aria-aiops-streamlit-app-wsp1zy.streamlit.app) | 🟢 Online |
-| **API REST** | [aria-api-production.up.railway.app](https://aria-api-production.up.railway.app/health) | 🟢 Online |
-| **Swagger UI** | [aria-api-production.up.railway.app/docs](https://aria-api-production.up.railway.app/docs) | 🟢 Online |
+| **Dashboard** | [afonsoas-aria-aiops-streamlit-app-wsp1zy.streamlit.app](https://afonsoas-aria-aiops-streamlit-app-wsp1zy.streamlit.app) | 🟢 Online (hiberna apos inatividade — 1º acesso leva ~1 min) |
+| **API REST** | Railway desativado — redeploy: [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) | 🔧 Redeploy pendente |
+| **Swagger UI** | `<url-da-api>/docs` apos o redeploy | 🔧 Redeploy pendente |
 | **Manual PDF** | [`docs/ARIA_Manual_Utilizacao.pdf`](docs/ARIA_Manual_Utilizacao.pdf) | 📄 Atualizado Sprint 4 |
 | **Arquitetura PDF** | [`docs/ARIA_Arquitetura_Tecnica.pdf`](docs/ARIA_Arquitetura_Tecnica.pdf) | 📄 Atualizado Sprint 4 |
 
@@ -24,7 +24,7 @@
 
 ## O Problema
 
-A Locaweb registra **122.543 incidentes/ano**, dos quais:
+O dataset da Locaweb registra **122.543 incidentes em 3 anos** (Jan/2023–Dez/2025), dos quais:
 
 | Indicador | Valor |
 |---|---|
@@ -50,10 +50,10 @@ em tempo real    ──►  TF-IDF + Stopwords PT-BR       ──►  API REST (
 
 | Modelo | Algoritmo | ROC-AUC | Precision | Recall | F1 | Dataset |
 |---|---|---|---|---|---|---|
-| Modelo A — Predição OLA | XGBoost + SMOTE + Calibração Isotônica | **0.86** | **27%** | 14% | 0.18 | 20.480 incidentes |
+| Modelo A — Predição OLA | XGBoost + SMOTE + Calibração Isotônica | **0.80** | **24%** | 18% | 0.20 | 25.600 incidentes (64/16/20) |
 | Modelo B — Classificação Prioridade | Random Forest | — | — | — | F1-macro **0.89** | 97.767 incidentes |
 
-> **Nota:** O Modelo A usa calibração isotônica pós-treinamento e threshold ótimo de 0.167 (maximização de F1). Thresholds de risco: ALTO ≥ 25%, MÉDIO ≥ 10%, BAIXO < 10%.
+> **Nota:** O Modelo A usa calibração isotônica e threshold ótimo de 0.143, ambos ajustados em um conjunto de **validação separado** (16%) — o teste (20%) fica intocado até a avaliação final, sem vazamento de dados. Thresholds de risco: ALTO ≥ 25%, MÉDIO ≥ 10%, BAIXO < 10%. As métricas ficam embutidas nos bundles `.pkl` e são exibidas dinamicamente no dashboard.
 
 ---
 
@@ -87,7 +87,7 @@ em tempo real    ──►  TF-IDF + Stopwords PT-BR       ──►  API REST (
 ### Exemplo cURL — Predição OLA com Explicação SHAP
 
 ```bash
-curl -X POST https://aria-api-production.up.railway.app/explain/ola \
+curl -X POST <url-da-api>/explain/ola \
   -H "Content-Type: application/json" \
   -d '{
     "prio_num": 2,
@@ -272,7 +272,7 @@ As tabelas `ARIA_OLA_PREDICTIONS` e `ARIA_PRIORITY_PREDICTIONS` são criadas aut
 3. Repositório: `afonsoas/aria-aiops` · Branch: `main` · Main file: `streamlit_app.py`
 4. **Advanced settings → Secrets:**
 ```toml
-ARIA_API_URL = "https://aria-api-production.up.railway.app"
+ARIA_API_URL = "<url-da-api-no-render>"
 ```
 5. Clique em **Deploy**
 
@@ -298,8 +298,8 @@ Variáveis configuradas no Railway:
 ### Novidades Sprint 4
 
 - **SHAP TreeExplainer** — explicação por instância no Preditor OLA (waterfall chart)
-- **Calibração Isotônica** — probabilidades calibradas pós-treino (ROC-AUC 0.84 → 0.86)
-- **Threshold Ótimo** — selecionado via precision-recall curve (maximização F1 = 0.167)
+- **Calibração Isotônica** — probabilidades calibradas pós-treino em validação separada (sem vazamento do teste)
+- **Threshold Ótimo** — selecionado via precision-recall curve na validação (maximização F1 = 0.143)
 - **Endpoint `/explain/ola`** — retorna top 8 features SHAP com direção e magnitude
 - **Endpoint `/predict/ola/batch`** — predição em lote de até 100 incidentes
 - **Página Simulação** — geração de incidentes sintéticos em tempo real com auto-refresh
